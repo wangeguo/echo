@@ -3,6 +3,7 @@
 #include <log.h>
 #include <HTTP.h>
 #include <context.h>
+#include <application.h>
 
 using namespace std;
 using namespace echo;
@@ -24,7 +25,12 @@ int main(int argc, char **argv)
   context.url = url;
 
   log(LOG_INFO, "Init request,reponse,status,url,context..");
-  
+
+  log(LOG_INFO, "Init Application");
+  static Application echoApplication;
+  echoApplication.start();
+
+  log(LOG_INFO, "RUN!");
   
   return 0;
 }
