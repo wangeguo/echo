@@ -3,10 +3,11 @@
 
 #include <string>
 
+#include <echo/uniform.h>
 #include <echo/util/logging/logger.h>
 #include <echo/data/status.h>
-#include <echo/data/request.h>
-#include <echo/data/response.h>
+#include <echo/request.h>
+#include <echo/response.h>
 #include <echo/engine/engine.h>
 #include <echo/context.h>
 #include <echo/application.h>
@@ -30,9 +31,7 @@ namespace echo {
 
   const std::string echo_version =  "0.0.2";
 
-  class Echo {
-  //class Echo : public echo::Uniform {
-  //class Echo : public echo::Uniform {
+  class Echo : public echo::Uniform {
   public:
 
 	/**
@@ -116,8 +115,8 @@ namespace echo {
      * @param response
      *            The response to update.
      */
-	virtual void handle(echo::data::Request request,
-						echo::data::Response response);
+	virtual void handle(echo::Request request,
+						echo::Response response);
 
 	/**
 	 * Indicates if the Echo is started.

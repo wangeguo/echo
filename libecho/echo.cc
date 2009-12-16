@@ -19,7 +19,7 @@ echo::Echo::Echo(echo::Context context)
 	owner = "";
 
 	if(echo::engine::Engine::getInstance() == NULL) {
-	  echo::Context::getCurrentLogger()::severe("Unable to fully initialize the Echo. No Echo engine available.");
+		echo::Context::getCurrentLogger()::severe("Unable to fully initialize the Echo. No Echo engine available.");
 		throw new runtime_error(
 			"Unable to fully initialize the Echo. No Echo Engine available.");
 	}
@@ -28,7 +28,7 @@ echo::Echo::Echo(echo::Context context)
 
 
 echo::Application echo::Echo::getApplication() {
-  return echo::Application::getCurrent();
+	return echo::Application::getCurrent();
 }
 
 std::string echo::Echo::getAuthor() {
@@ -75,14 +75,14 @@ std::string echo::Echo::getOwner()
 }
 
 void echo::Echo::handle(echo::data::Request request,
-								echo::data::Response response) 
+						echo::data::Response response) 
 {
 	// Associate the response to the current thread
-  echo::Response::setCurrent(response);
+	echo::Response::setCurrent(response);
 
 	// Associate the context to the current thread
 	if(getContext() != NULL){
-	  echo::Context::setCurrent(getContext());
+		echo::Context::setCurrent(getContext());
 	}
 
 	// Check if the Echo was started

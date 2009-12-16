@@ -1,5 +1,8 @@
-#ifnedf _ECHO_UNIFORM_H_
+#ifndef _ECHO_UNIFORM_H_
 #define _ECHO_UNIFORM_H_
+
+#include <echo/request.h>
+#include <echo/response.h>
 
 namespace echo {
 
@@ -31,7 +34,7 @@ namespace echo {
 	 *    The associated response.
 	 */
   public:
-	virtual void handle(Request request, Response response) = 0;
+	virtual void handle(echo::Request request, echo::Response response) = 0;
   };
 } // namespace echo
 

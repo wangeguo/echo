@@ -121,7 +121,7 @@ namespace echo {
 		echo::util::logging::Logger getLogger();
 
 	  private:
-		static final echo::util::ThreadLocal<echo::Context> CURRENT;
+		static const echo::util::ThreadLocal<echo::Context> CURRENT;
 
 		/** The client dispatcher. */
 		volatile echo::Client clientDispatcher;
