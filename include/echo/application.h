@@ -7,6 +7,7 @@ namespace echo {
   class Application {
   public:
 	void start();
+	static echo::Application getCurrent();
   };
 };
 
