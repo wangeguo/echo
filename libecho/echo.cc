@@ -13,14 +13,14 @@ echo::Echo::Echo(echo::Context context)
 {
 	this->context = context;
 	this->started = false;
-	name = "";
-	description = "";
-	author = "";
-	owner = "";
+	name = NULL;
+	description = NULL;
+	author = NULL;
+	owner = NULL;
 
 	if(echo::engine::Engine::getInstance() == NULL) {
 		echo::Context::getCurrentLogger()::severe("Unable to fully initialize the Echo. No Echo engine available.");
-		throw new runtime_error(
+		throw std::runtime_error(
 			"Unable to fully initialize the Echo. No Echo Engine available.");
 	}
 	// echo.component.ChildContext.fireContextChanged(this,context);
@@ -74,8 +74,8 @@ std::string echo::Echo::getOwner()
 	return owner;
 }
 
-void echo::Echo::handle(echo::data::Request request,
-						echo::data::Response response) 
+void echo::Echo::handle(echo::Request request,
+						echo::Response response) 
 {
 	// Associate the response to the current thread
 	echo::Response::setCurrent(response);
@@ -90,7 +90,7 @@ void echo::Echo::handle(echo::data::Request request,
 		try {
 			start();
 		}
-		catch(Exception e){
+		catch(std::exception e){
 			// Occurred while starting the Echo
 			getContext().getLogger().log(Level.WARNING, UNABLE_TO_START,e);
 			response.setStatus(Status.SERVER_ERROR_INTERNAL);
