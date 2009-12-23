@@ -30,7 +30,7 @@ class MediaType;
 
 
 namespace echo {
-
+  
   /**
    * Generic message exchanged between components.
    * 
@@ -38,7 +38,7 @@ namespace echo {
    */
   class Message {
 
-  public:
+ public:
 	/**
 	 * Constructor.
 	 */
@@ -294,7 +294,7 @@ namespace echo {
 	  this->warnings = warnings;
 	}
 
-  private:
+ private:
 	/** The modifiable attributes map. */
 	volatile std::map<std::string, Object> attributes;
 
