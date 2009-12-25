@@ -1,5 +1,5 @@
-#ifndef _ECHO_H_
-#define _ECHO_H_
+#ifndef _ECHO_ECHO_H_
+#define _ECHO_ECHO_H_
 
 #include <string>
 
@@ -204,4 +204,4 @@ namespace echo {
 
 } // namespace echo
 
-#endif // _ECHO_H_
+#endif // _ECHO_ECHO_H_

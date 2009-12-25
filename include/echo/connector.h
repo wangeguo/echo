@@ -11,31 +11,31 @@
 
 namespace echo {
 
-/**
- * Echo enabling communication between Components. "A connector is an
- * abstract mechanism that mediates communication, coordination, or cooperation
- * among components. Connectors enable communication between components by
- * transferring data elements from one interface to another without changing the
- * data." Roy T. Fielding<br>
- * <br>
- * "Encapsulate the activities of accessing resources and transferring resource
- * representations. The connectors present an abstract interface for component
- * communication, enhancing simplicity by providing a clean separation of
- * concerns and hiding the underlying implementation of resources and
- * communication mechanisms" Roy T. Fielding<br>
- * <br>
- * Concurrency note: instances of this class or its subclasses can be invoked by
- * several threads at the same time and therefore must be thread-safe. You
- * should be especially careful when storing state in member variables.
- * 
- * @see <a
- *      href="http://roy.gbiv.com/pubs/dissertation/software_arch.htm#sec_1_2_2">Source
- *      dissertation</a>
- * @see <a
- *      href="http://roy.gbiv.com/pubs/dissertation/rest_arch_style.htm#sec_5_2_2">Source
- *      dissertation</a>
- * @author Jerome Louvel Eguo Wang
- */
+  /**
+   * Echo enabling communication between Components. "A connector is an
+   * abstract mechanism that mediates communication, coordination, or cooperation
+   * among components. Connectors enable communication between components by
+   * transferring data elements from one interface to another without changing the
+   * data." Roy T. Fielding<br>
+   * <br>
+   * "Encapsulate the activities of accessing resources and transferring resource
+   * representations. The connectors present an abstract interface for component
+   * communication, enhancing simplicity by providing a clean separation of
+   * concerns and hiding the underlying implementation of resources and
+   * communication mechanisms" Roy T. Fielding<br>
+   * <br>
+   * Concurrency note: instances of this class or its subclasses can be invoked by
+   * several threads at the same time and therefore must be thread-safe. You
+   * should be especially careful when storing state in member variables.
+   * 
+   * @see <a
+   *      href="http://roy.gbiv.com/pubs/dissertation/software_arch.htm#sec_1_2_2">Source
+   *      dissertation</a>
+   * @see <a
+   *      href="http://roy.gbiv.com/pubs/dissertation/rest_arch_style.htm#sec_5_2_2">Source
+   *      dissertation</a>
+   * @author Jerome Louvel Eguo Wang
+   */
 
   //public abstract class Connector extends Restlet {
 
@@ -50,7 +50,7 @@ namespace echo {
      *            The context.
      */
     Connector(echo::Context context) {
-        Connector(context, NULL);
+      Connector(context, NULL);
     }
 
     /**
@@ -69,7 +69,7 @@ namespace echo {
      * @return The protocols simultaneously supported.
      */
     std::list<echo::data::Protocol> getProtocols() {
-        return protocols;
+      return protocols;
     }
 
     /**
@@ -88,10 +88,10 @@ namespace echo {
      */
     //public synchronized void setProtocols(List<Protocol> protocols) {
     void setProtocols(std::list<echo::data::Protocol> protocols) {
-        this->protocols->clear();
-        if (protocols != NULL) {
-            this->protocols->addAll(protocols);
-        }
+      this->protocols->clear();
+      if (protocols != NULL) {
+        this->protocols->addAll(protocols);
+      }
     }
 
         

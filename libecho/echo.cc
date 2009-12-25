@@ -1,152 +1,158 @@
 #include <echo/echo.h>
-#include <echo/engine/engine.h>
+
 #include <stdexcept>
 
-const std::string echo::Echo::UNABLE_TO_START = "Unable to start the Echo";
+#include <echo/engine/engine.h>
 
-echo::Echo::Echo()
+namespace echo {
+
+const std::string Echo::UNABLE_TO_START = "Unable to start the Echo";
+
+Echo::Echo()
 {
-	// call Echo with NULL context
+  // call Echo with NULL context
 }
 
-echo::Echo::Echo(echo::Context context)
+Echo::Echo(echo::Context context)
 {
-	this->context = context;
-	this->started = false;
-	name = NULL;
-	description = NULL;
-	author = NULL;
-	owner = NULL;
+  this->context = context;
+  this->started = false;
+  name = NULL;
+  description = NULL;
+  author = NULL;
+  owner = NULL;
 
-	if(echo::engine::Engine::getInstance() == NULL) {
-		echo::Context::getCurrentLogger()::severe("Unable to fully initialize the Echo. No Echo engine available.");
-		throw std::runtime_error(
-			"Unable to fully initialize the Echo. No Echo Engine available.");
-	}
-	// echo.component.ChildContext.fireContextChanged(this,context);
+  if(echo::engine::Engine::getInstance() == NULL) {
+    echo::Context::getCurrentLogger()::severe("Unable to fully initialize the Echo. No Echo engine available.");
+    throw std::runtime_error(
+        "Unable to fully initialize the Echo. No Echo Engine available.");
+  }
+  // echo.component.ChildContext.fireContextChanged(this,context);
 }
 
 
-echo::Application echo::Echo::getApplication() {
-	return echo::Application::getCurrent();
+echo::Application Echo::getApplication() {
+  return echo::Application::getCurrent();
 }
 
-std::string echo::Echo::getAuthor() {
-	return author;
+std::string Echo::getAuthor() {
+  return author;
 }
 
-echo::Context echo::Echo::getContext(){
-	return context;
+echo::Context Echo::getContext(){
+  return context;
 }
 
-std::string echo::Echo::getDescription()
+std::string Echo::getDescription()
 {
-	return description;
+  return description;
 }
 
-echo::util::logging::Logger echo::Echo::getLogger()
+echo::util::logging::Logger Echo::getLogger()
 {
-	echo::util::logging::Logger result;
-	echo::Context context = getContext();
+  echo::util::logging::Logger result;
+  echo::Context context = getContext();
 
-	if(context == NULL){
-		context = echo::Context::getCurrent();
-	}
+  if(context == NULL){
+    context = echo::Context::getCurrent();
+  }
 
-	if(context != NULL){
-		result = context.getLogger();
-	}
+  if(context != NULL){
+    result = context.getLogger();
+  }
 
-	if(result == NULL){
-		result = Engine.getLogger(this, "echo");
-	}
+  if(result == NULL){
+    result = Engine.getLogger(this, "echo");
+  }
 
-	return result;
+  return result;
 }
 
-std::string echo::Echo::getName()
+std::string Echo::getName()
 {
-	return name;
+  return name;
 }
 
-std::string echo::Echo::getOwner()
+std::string Echo::getOwner()
 {
-	return owner;
+  return owner;
 }
 
-void echo::Echo::handle(echo::Request request,
-						echo::Response response) 
+void Echo::handle(echo::Request request,
+                  echo::Response response) 
 {
-	// Associate the response to the current thread
-	echo::Response::setCurrent(response);
+  // Associate the response to the current thread
+  echo::Response::setCurrent(response);
 
-	// Associate the context to the current thread
-	if(getContext() != NULL){
-		echo::Context::setCurrent(getContext());
-	}
+  // Associate the context to the current thread
+  if(getContext() != NULL){
+    echo::Context::setCurrent(getContext());
+  }
 
-	// Check if the Echo was started
-	if(isStopped()){
-		try {
-			start();
-		}
-		catch(std::exception e){
-			// Occurred while starting the Echo
-			getContext().getLogger().log(Level.WARNING, UNABLE_TO_START,e);
-			response.setStatus(Status.SERVER_ERROR_INTERNAL);
-		}
+  // Check if the Echo was started
+  if(isStopped()){
+    try {
+      start();
+    }
+    catch(std::exception e){
+      // Occurred while starting the Echo
+      getContext().getLogger().log(Level.WARNING, UNABLE_TO_START,e);
+      response.setStatus(Status.SERVER_ERROR_INTERNAL);
+    }
 
-		if(!isStarted()){
-			// No exception raised but the Echo somehow couldn't by started
-			getContext().getLogger().log(echo::util::logging::Level.WARNING,
-										 UNABLE_TO_START);
-			response.setStatus(Status.SERVER_ERROR_INTERNAL);
-		}
-	}
+    if(!isStarted()){
+      // No exception raised but the Echo somehow couldn't by started
+      getContext().getLogger().log(echo::util::logging::Level.WARNING,
+                                   UNABLE_TO_START);
+      response.setStatus(Status.SERVER_ERROR_INTERNAL);
+    }
+  }
 }
 
-bool echo::Echo::isStarted()
+bool Echo::isStarted()
 {
-	return started;
+  return started;
 }
 
-bool echo::Echo::isStopped()
+bool Echo::isStopped()
 {
-	return !started;
+  return !started;
 }
 
-void echo::Echo::setAuthor(std::string author)
+void Echo::setAuthor(std::string author)
 {
-	this->author = author;
+  this->author = author;
 }
 
-void echo::Echo::setContext(echo::Context context)
+void Echo::setContext(echo::Context context)
 {
-	this->context = context;
-	// echo.engine.component.ChildContext.fireContextChanged(this, context);
+  this->context = context;
+  // echo.engine.component.ChildContext.fireContextChanged(this, context);
 }
 
-void echo::Echo::setDescription(std::string description)
+void Echo::setDescription(std::string description)
 {
-	this->description = description;
+  this->description = description;
 }
 
-void echo::Echo::setName(std::string name)
+void Echo::setName(std::string name)
 {
-	this->name = name;
+  this->name = name;
 }
 
-void echo::Echo::setOwner(std::string owner)
+void Echo::setOwner(std::string owner)
 {
-	this->owner = owner;
+  this->owner = owner;
 }
 
-void echo::Echo::start() 
+void Echo::start() 
 {
-	started = true;
+  started = true;
 }
 
-void echo::Echo::stop()
+void Echo::stop()
 {
-	started = false;
+  started = false;
 }
+
+} // namespace echo
