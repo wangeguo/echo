@@ -300,6 +300,7 @@ namespace echo {
      *            The service class to match.
      * @return The matched service instance.
      */
+    /*
     @SuppressWarnings("unchecked")
         <T extends Service> T getService(Class<T> clazz) {
       for (Service service : getServices()) {
@@ -310,6 +311,7 @@ namespace echo {
 
       return NULL;
     }
+    */
 
     /**
      * Returns the modifiable list of services.

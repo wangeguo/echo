@@ -3,127 +3,118 @@
 namespace echo {
 namespace data {
 
-const Status Status::CLIENT_ERROR_BAD_REQUEST = new Status(400);
+const Status Status::CLIENT_ERROR_BAD_REQUEST(400);
 
-const Status Status::CLIENT_ERROR_CONFLICT = new Status(409);
+const Status Status::CLIENT_ERROR_CONFLICT(409);
 
-const Status Status::CLIENT_ERROR_EXPECTATION_FAILED = new Status(417);
+const Status Status::CLIENT_ERROR_EXPECTATION_FAILED(417);
 
-const Status Status::CLIENT_ERROR_FAILED_DEPENDENCY = new Status(424);
+const Status Status::CLIENT_ERROR_FAILED_DEPENDENCY(424);
 
-const Status Status::CLIENT_ERROR_FORBIDDEN = new Status(403);
+const Status Status::CLIENT_ERROR_FORBIDDEN(403);
 
-const Status Status::CLIENT_ERROR_GONE = new Status(410);
+const Status Status::CLIENT_ERROR_GONE(410);
 
-const Status Status::CLIENT_ERROR_LENGTH_REQUIRED = new Status(411);
+const Status Status::CLIENT_ERROR_LENGTH_REQUIRED(411);
 
-const Status Status::CLIENT_ERROR_LOCKED = new Status(423);
+const Status Status::CLIENT_ERROR_LOCKED(423);
 
-const Status Status::CLIENT_ERROR_METHOD_NOT_ALLOWED = new Status(405);
+const Status Status::CLIENT_ERROR_METHOD_NOT_ALLOWED(405);
 
-const Status Status::CLIENT_ERROR_NOT_ACCEPTABLE = new Status(406);
+const Status Status::CLIENT_ERROR_NOT_ACCEPTABLE(406);
 
-const Status Status::CLIENT_ERROR_NOT_FOUND = new Status(404);
+const Status Status::CLIENT_ERROR_NOT_FOUND(404);
 
-const Status Status::CLIENT_ERROR_PAYMENT_REQUIRED = new Status(402);
+const Status Status::CLIENT_ERROR_PAYMENT_REQUIRED(402);
 
-const Status Status::CLIENT_ERROR_PRECONDITION_FAILED = new Status(
-    412);
+const Status Status::CLIENT_ERROR_PRECONDITION_FAILED(412);
 
-const Status Status::CLIENT_ERROR_PROXY_AUTHENTIFICATION_REQUIRED = new Status(
-    407);
+const Status Status::CLIENT_ERROR_PROXY_AUTHENTIFICATION_REQUIRED(407);
 
-const Status Status::CLIENT_ERROR_REQUEST_ENTITY_TOO_LARGE = new Status(
-    413);
+const Status Status::CLIENT_ERROR_REQUEST_ENTITY_TOO_LARGE(413);
 
-const Status Status::CLIENT_ERROR_REQUEST_TIMEOUT = new Status(408);
+const Status Status::CLIENT_ERROR_REQUEST_TIMEOUT(408);
 
-const Status Status::CLIENT_ERROR_REQUEST_URI_TOO_LONG = new Status(
-    414);
+const Status Status::CLIENT_ERROR_REQUEST_URI_TOO_LONG(414);
 
-const Status Status::CLIENT_ERROR_REQUESTED_RANGE_NOT_SATISFIABLE = new Status(
-    416);
+const Status Status::CLIENT_ERROR_REQUESTED_RANGE_NOT_SATISFIABLE(416);
 
-const Status Status::CLIENT_ERROR_UNAUTHORIZED = new Status(401);
+const Status Status::CLIENT_ERROR_UNAUTHORIZED(401);
 
-const Status Status::CLIENT_ERROR_UNPROCESSABLE_ENTITY = new Status(422);
+const Status Status::CLIENT_ERROR_UNPROCESSABLE_ENTITY(422);
 
-const Status Status::CLIENT_ERROR_UNSUPPORTED_MEDIA_TYPE = new Status(
-    415);
+const Status Status::CLIENT_ERROR_UNSUPPORTED_MEDIA_TYPE(415);
 
-const Status Status::CONNECTOR_ERROR_COMMUNICATION = new Status(1001);
+const Status Status::CONNECTOR_ERROR_COMMUNICATION(1001);
 
-const Status Status::CONNECTOR_ERROR_CONNECTION = new Status(1000);
+const Status Status::CONNECTOR_ERROR_CONNECTION(1000);
 
-const Status Status::CONNECTOR_ERROR_INTERNAL = new Status(1002);
+const Status Status::CONNECTOR_ERROR_INTERNAL(1002);
 
-const Status Status::INFO_CONTINUE = new Status(100);
+const Status Status::INFO_CONTINUE(100);
 
-const Status Status::INFO_PROCESSING = new Status(102);
+const Status Status::INFO_PROCESSING(102);
 
-const Status Status::INFO_SWITCHING_PROTOCOL = new Status(101);
+const Status Status::INFO_SWITCHING_PROTOCOL(101);
 
-const Status Status::INFO_STALE_RESPONSE = new Status(110);
+const Status Status::INFO_STALE_RESPONSE(110);
 
-const Status Status::INFO_REVALIDATION_FAILED = new Status(111);
+const Status Status::INFO_REVALIDATION_FAILED(111);
 
-const Status Status::INFO_DISCONNECTED_OPERATION = new Status(112);
+const Status Status::INFO_DISCONNECTED_OPERATION(112);
 
-const Status Status::INFO_HEURISTIC_EXPIRATION = new Status(113);
+const Status Status::INFO_HEURISTIC_EXPIRATION(113);
 
-const Status Status::INFO_MISC_WARNING = new Status(199);
+const Status Status::INFO_MISC_WARNING(199);
 
-const Status Status::REDIRECTION_FOUND = new Status(302);
+const Status Status::REDIRECTION_FOUND(302);
 
-const Status Status::REDIRECTION_MULTIPLE_CHOICES = new Status(300);
+const Status Status::REDIRECTION_MULTIPLE_CHOICES(300);
 
-const Status Status::REDIRECTION_NOT_MODIFIED = new Status(304);
+const Status Status::REDIRECTION_NOT_MODIFIED(304);
 
-const Status Status::REDIRECTION_PERMANENT = new Status(301);
+const Status Status::REDIRECTION_PERMANENT(301);
 
-const Status Status::REDIRECTION_SEE_OTHER = new Status(303);
+const Status Status::REDIRECTION_SEE_OTHER(303);
 
-const Status Status::REDIRECTION_TEMPORARY = new Status(307);
+const Status Status::REDIRECTION_TEMPORARY(307);
 
-const Status Status::REDIRECTION_USE_PROXY = new Status(305);
+const Status Status::REDIRECTION_USE_PROXY(305);
 
-const Status Status::SERVER_ERROR_BAD_GATEWAY = new Status(502);
+const Status Status::SERVER_ERROR_BAD_GATEWAY(502);
 
-const Status Status::SERVER_ERROR_GATEWAY_TIMEOUT = new Status(504);
+const Status Status::SERVER_ERROR_GATEWAY_TIMEOUT(504);
 
-const Status Status::SERVER_ERROR_INSUFFICIENT_STORAGE = new Status(
-    507);
+const Status Status::SERVER_ERROR_INSUFFICIENT_STORAGE(507);
 
-const Status Status::SERVER_ERROR_INTERNAL = new Status(500);
+const Status Status::SERVER_ERROR_INTERNAL(500);
 
-const Status Status::SERVER_ERROR_NOT_IMPLEMENTED = new Status(501);
+const Status Status::SERVER_ERROR_NOT_IMPLEMENTED(501);
 
-const Status Status::SERVER_ERROR_SERVICE_UNAVAILABLE = new Status(
-    503);
+const Status Status::SERVER_ERROR_SERVICE_UNAVAILABLE(503);
 
-const Status Status::SERVER_ERROR_VERSION_NOT_SUPPORTED = new Status(
-    505);
+const Status Status::SERVER_ERROR_VERSION_NOT_SUPPORTED(505);
 
-const Status Status::SUCCESS_ACCEPTED = new Status(202);
+const Status Status::SUCCESS_ACCEPTED(202);
 
-const Status Status::SUCCESS_CREATED = new Status(201);
+const Status Status::SUCCESS_CREATED(201);
 
-const Status Status::SUCCESS_MULTI_STATUS = new Status(207);
+const Status Status::SUCCESS_MULTI_STATUS(207);
 
-const Status Status::SUCCESS_NO_CONTENT = new Status(204);
+const Status Status::SUCCESS_NO_CONTENT(204);
 
-const Status Status::SUCCESS_NON_AUTHORITATIVE = new Status(203);
+const Status Status::SUCCESS_NON_AUTHORITATIVE(203);
 
-const Status Status::SUCCESS_OK = new Status(200);
+const Status Status::SUCCESS_OK(200);
 
-const Status Status::SUCCESS_TRANSFORMATION_APPLIED = new Status(214);
+const Status Status::SUCCESS_TRANSFORMATION_APPLIED(214);
 
-const Status Status::SUCCESS_MISC_PERSISTENT_WARNING = new Status(299);
+const Status Status::SUCCESS_MISC_PERSISTENT_WARNING(299);
 
-const Status Status::SUCCESS_PARTIAL_CONTENT = new Status(206);
+const Status Status::SUCCESS_PARTIAL_CONTENT(206);
 
 
-const Status Status::SUCCESS_RESET_CONTENT = new Status(205);
+const Status Status::SUCCESS_RESET_CONTENT(205);
 
 bool Status::isError(int code) {
   return isClientError(code) || isServerError(code)
@@ -132,7 +123,7 @@ bool Status::isError(int code) {
 
 
 Status Status::valueOf(int code) {
-  Status result = null;
+  Status result = NULL;
 
   switch (code) {
     case 100:
@@ -331,7 +322,7 @@ Status::Status(const Status status, const std::string description) {
 
 Status::Status(const Status status, const Throwable throwable) {
   Status(status.getCode(), throwable, status.getName(),
-         (throwable == null) ? null : throwable.getMessage(), status
+         (throwable == NULL) ? NULL : throwable.getMessage(), status
          .getUri());
 }
 
@@ -341,7 +332,7 @@ Status::Status(const Status status, const Throwable throwable,
          .getUri());
 }
 
-@Override
+//@Override
 bool Status::equals(const Object object) {
   return (object instanceof Status)
       && (this->code == ((Status) object).getCode());
@@ -350,7 +341,7 @@ bool Status::equals(const Object object) {
 std::string Status::getDescription() {
   std::string result = this->description;
 
-  if (result == null) {
+  if (result == NULL) {
     switch (this->code) {
       case 100:
         result = "The client should continue with its request";
@@ -534,7 +525,7 @@ std::string Status::getDescription() {
 std::string Status::getName() {
   std::string result = this->name;
 
-  if (result == null) {
+  if (result == NULL) {
     switch (this->code) {
       case 100:
         result = "Continue";
@@ -718,7 +709,7 @@ std::string Status::getName() {
 std::string Status::getUri() {
   std::string result = this->uri;
 
-  if (result == null) {
+  if (result == NULL) {
     switch (this->code) {
       case 100:
         result = BASE_HTTP + "#sec10.1.1";
@@ -933,11 +924,11 @@ bool Status::isSuccess() {
 //@Override
 std::string Status::toString() {
   return getName() + " (" + this->code + ")"
-      + ((getDescription() == null) ? "" : " - " + getDescription());
+      + ((getDescription() == NULL) ? "" : " - " + getDescription());
 }
 
 std::string Status::checkDescription(std::string description) {
-  if (description != null) {
+  if (description != NULL) {
     if (description.contains("\n") && description.contains("\r")) {
       throw new IllegalArgumentException(
           "Description of the status must not contain CR and LF characters.");

@@ -694,7 +694,7 @@ namespace echo {
      *            The specification code.
      */
     Status(int code) {
-      Status(code, null, null, null);
+      Status(code, NULL, NULL, NULL);
     }
 
     /**
@@ -711,7 +711,7 @@ namespace echo {
      */
     Status(int code, const std::string name, const std::string description,
            const std::string uri) {
-      Status(code, null, name, description, uri);
+      Status(code, NULL, name, description, uri);
     }
 
     /**
@@ -723,7 +723,7 @@ namespace echo {
      *            The related error or exception.
      */
     Status(int code, Throwable throwable) {
-      Status(code, throwable, null, null, null);
+      Status(code, throwable, NULL, NULL, NULL);
     }
 
     /**

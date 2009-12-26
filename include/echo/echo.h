@@ -29,7 +29,7 @@
 
 namespace echo {
 
-  const std::string echo_version =  "0.0.2";
+  const std::string echo_version =  "0.0.3";
 
   class Echo : public echo::Uniform {
   public:

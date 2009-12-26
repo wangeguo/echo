@@ -1,0 +1,7 @@
+lib目录
+
+存放编译后的libecho静态库(libecho.a)
+和动态库(libecho.so).
+
+以及echo依赖的其它程序库,比如fastcgi的库
+
