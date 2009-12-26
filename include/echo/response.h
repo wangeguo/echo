@@ -15,15 +15,16 @@
   import org.restlet.data.Method;
   import org.restlet.data.Reference;
   import org.restlet.data.ServerInfo;
-  import org.restlet.data.Status;
+
   import org.restlet.engine.util.CookieSettingSeries;
   import org.restlet.util.Series;
 */
 
 #include <list>
 #include <set>
-#include <echo/message.h>
 
+#include <echo/message.h>
+#include <echo/data/status.h>
 
 namespace echo {
 
@@ -36,7 +37,7 @@ namespace echo {
    * @see echo::Uniform
    * @author Jerome Louvel Eguo Wang
    */
-Response : public echo::Message {
+class Response : public echo::Message {
 
  public:
     /**
@@ -219,7 +220,7 @@ Response : public echo::Message {
      * 
      * @return The status.
      */
-    Status getStatus() {
+    echo::data::Status getStatus() {
       return this->status;
     }
 
@@ -490,7 +491,7 @@ Response : public echo::Message {
      * @param status
      *            The status to set.
      */
-    void setStatus(Status status) {
+    void setStatus(echo::data::Status status) {
       this->status = status;
     }
 
@@ -502,7 +503,7 @@ Response : public echo::Message {
      * @param message
      *            The status message.
      */
-    void setStatus(Status status, String message);
+    void setStatus(echo::data::Status status, String message);
 
     /**
      * Sets the status.
@@ -512,7 +513,7 @@ Response : public echo::Message {
      * @param throwable
      *            The related error or exception.
      */
-    void setStatus(Status status, Throwable throwable);
+    void setStatus(echo::data::Status status, Throwable throwable);
 
     /**
      * Sets the status.
@@ -524,7 +525,7 @@ Response : public echo::Message {
      * @param message
      *            The status message.
      */
-    void setStatus(Status status, Throwable throwable, String message);
+    void setStatus(echo::data::Status status, Throwable throwable, String message);
 
 
  private:
@@ -560,7 +561,7 @@ Response : public echo::Message {
     volatile ServerInfo serverInfo;
 
     /** The status. */
-    volatile Status status;
+    volatile echo::data::Status status;
 
     /**
      * The authentication information sent by an origin server to a client in

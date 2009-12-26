@@ -316,7 +316,7 @@ namespace echo {
      * @param hostUri
      *            The host URI.
      */
-    void setHostRef(String hostUri);
+    void setHostRef(std::string hostUri);
 
     /**
      * Sets the method called.

@@ -154,15 +154,15 @@ void Response::setLocationRef(String locationUri) {
   setLocationRef(new Reference(baseRef, locationUri).getTargetRef());
 }
 
-void Response::setStatus(Status status, String message) {
+void Response::setStatus(echo::data::Status status, String message) {
   setStatus(new Status(status, message));
 }
 
-void Response::setStatus(Status status, Throwable throwable) {
+void Response::setStatus(echo::data::Status status, Throwable throwable) {
   setStatus(new Status(status, throwable));
 }
 
-void Response::setStatus(Status status, Throwable throwable, String message) {
+void Response::setStatus(echo::data::Status status, Throwable throwable, String message) {
   setStatus(new Status(status, throwable, message));
 }
 

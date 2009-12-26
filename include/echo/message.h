@@ -16,7 +16,6 @@
 //#include <echo/data/warning.h>
 //#include <echo/representation/representation.h>
 //#include <echo/representation/string-representation.h>
-
 //TODO: 实现下边的类
 
 class Date;
@@ -161,7 +160,7 @@ namespace echo {
 	 * 
 	 * @return The callback invoked before sending the message entity.
 	 */
-	Uniform getOnContinue() {
+    Uniform getOnContinue() {
 	  return onContinue;
 	}
 
@@ -170,7 +169,7 @@ namespace echo {
 	 * 
 	 * @return The callback invoked after sending the message.
 	 */
-	Uniform getOnSent() {
+    Uniform getOnSent() {
 	  return onSent;
 	}
 
