@@ -1,7 +1,7 @@
 关于Echo
  Echo 是一个为开发者提供编写符合REST风格的客户端或服务端程序的C++语言
- 程序库，改写自Java语言编写的Restlet(http://www.restlet.org)框架。Echo
- 使用FastCGI技术替换Restlet中使用的的Java相关的技术。
+ 程序库，改写自Java语言编写的Restlet(http://www.restlet.org)框架。
+ Echo使用FastCGI技术替换Restlet中使用的的Java相关的技术。
 
 开发进展
  目前的工作任然是导换restlet的java版本到C++版本。
