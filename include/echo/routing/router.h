@@ -1,24 +1,22 @@
 #ifndef _ECHO_ROUTING_ROUTER_H_
 #define _ECHO_ROUTING_ROUTER_H_
 
-/*
-import java.util.logging.Level;
-
-import org.restlet.Context;
-import org.restlet.Request;
-import org.restlet.Response;
-import org.restlet.Restlet;
-import org.restlet.data.Status;
-import org.restlet.resource.Directory;
-import org.restlet.resource.Finder;
-import org.restlet.util.RouteList;
-*/
+#include <string>
+#include <echo/util/logging/level.h>
+#include <echo/context.h>
+#include <echo/request.h>
+#include <echo/response.h>
+#include <echo/echo.>
+#include <echo/data/status.h>
+#include <echo/resource/directory.h>
+#include <echo/resource/finder.h>
+#include <echo/util/route-list.h>
 
 namespace echo {
 namespace routing {
 
 /**
- * Restlet routing calls to one of the attached routes. Each route can compute
+ * Echo routing calls to one of the attached routes. Each route can compute
  * an affinity score for each call depending on various criteria. The attach()
  * method allow the creation of routes based on URI patterns matching the
  * beginning of a the resource reference's remaining part.<br>
@@ -51,716 +49,728 @@ namespace routing {
  */
 class Router : public echo::Echo {
 
-    /**
-     * Each call will be routed to the route with the best score, if the
-     * required score is reached.
-     * 
-     * @deprecated Use {@link #MODE_BEST_MATCH} instead.
-     */
-    @Deprecated
-    public static final int BEST = 1;
+ public:
 
-    /**
-     * Each call will be routed according to a custom mode.
-     * 
-     * @deprecated Use {@link #MODE_CUSTOM} instead.
-     */
-    @Deprecated
-    public static final int CUSTOM = 6;
+  /**
+   * Constructor. Note that usage of this constructor is not recommended as
+   * the Router won't have a proper context set. In general you will prefer to
+   * use the other constructor and pass it the parent application's context or
+   * eventually the parent component's context if you don't use applications.
+   */
+  Router() {
+    Router(null);
+  }
+  
+  /**
+   * Constructor.
+   * 
+   * @param context
+   *            The context.
+   */
+  Router(Context context) {
+    Echo(context);
+    routes = new RouteList();
+    defaultMatchingMode = Template.MODE_EQUALS;
+    defaultMatchingQuery = false;
+    defaultRoute = null;
+    finderClass = Finder.class;
+    routingMode = MODE_FIRST_MATCH;
+    requiredScore = 0.5F;
+    maxAttempts = 1;
+    retryDelay = 500L;
+  }
 
-    /**
-     * Each call is routed to the first route if the required score is reached.
-     * If the required score is not reached, then the route is skipped and the
-     * next one is considered.
-     * 
-     * @deprecated Use {@link #MODE_FIRST_MATCH} instead.
-     */
-    @Deprecated
-    public static final int FIRST = 2;
+  /**
+   * Attaches a target Echo to this router with an empty URI pattern. A new
+   * route will be added routing to the target when any call is received.
+   * 
+   * @param target
+   *            The target Echo to attach.
+   * @return The created route.
+   */
+  //@SuppressWarnings("deprecation")
+  Route attach(echo::Echo target) {
+    return attach("", target);
+  }
 
-    /**
-     * Each call will be routed to the last route if the required score is
-     * reached. If the required score is not reached, then the route is skipped
-     * and the previous one is considered.
-     * 
-     * @deprecated Use {@link #MODE_LAST_MATCH} instead.
-     */
-    @Deprecated
-    public static final int LAST = 3;
+  /**
+   * Attaches a target Resource class to this router based on a given URI
+   * pattern. A new route will be added routing to the target when calls with
+   * a URI matching the pattern will be received.
+   * 
+   * @param pathTemplate
+   *            The URI path template that must match the relative part of the
+   *            resource URI.
+   * @param targetClass
+   *            The target Resource class to attach.
+   * @return The created route.
+   */
+  //@SuppressWarnings("deprecation")
+  Route attach(std::string pathTemplate, Class<?> targetClass) {
+    return attach(pathTemplate, createFinder(targetClass));
+  }
 
-    /**
-     * Each call will be routed to the route with the best score, if the
-     * required score is reached.
-     */
-    public static final int MODE_BEST_MATCH = 1;
+  /**
+   * Attaches a target Echo to this router based on a given URI pattern. A
+   * new route will be added routing to the target when calls with a URI
+   * matching the pattern will be received.
+   * 
+   * @param pathTemplate
+   *            The URI path template that must match the relative part of the
+   *            resource URI.
+   * @param target
+   *            The target Echo to attach.
+   * @return The created route.
+   */
+  //@SuppressWarnings("deprecation")
+  Route attach(std::string pathTemplate, echo::Echo target) {
+    const Route result = createRoute(pathTemplate, target);
+    getRoutes().add(result);
+    return result;
+  }
 
-    /**
-     * Each call will be routed according to a custom mode.
-     */
-    public static final int MODE_CUSTOM = 6;
+  /**
+   * Attaches a Resource class to this router as the default target to invoke
+   * when no route matches. It actually sets a default route that scores all
+   * calls to 1.0.
+   * 
+   * @param defaultTargetClass
+   *            The target Resource class to attach.
+   * @return The created route.
+   */
+  //@SuppressWarnings("deprecation")
+  Route attachDefault(Class<?> defaultTargetClass) {
+    return attachDefault(createFinder(defaultTargetClass));
+  }
 
-    /**
-     * Each call is routed to the first route if the required score is reached.
-     * If the required score is not reached, then the route is skipped and the
-     * next one is considered.
-     */
-    public static final int MODE_FIRST_MATCH = 2;
+  /**
+   * Attaches a Echo to this router as the default target to invoke when no
+   * route matches. It actually sets a default route that scores all calls to
+   * 1.0.
+   * 
+   * @param defaultTarget
+   *            The Echo to use as the default target.
+   * @return The created route.
+   */
+  //@SuppressWarnings("deprecation")
+  Route attachDefault(echo::Echo defaultTarget) {
+    Route result = createRoute("", defaultTarget);
+    result.setMatchingMode(Template.MODE_STARTS_WITH);
+    setDefaultRoute(result);
+    return result;
+  }
 
-    /**
-     * Each call will be routed to the last route if the required score is
-     * reached. If the required score is not reached, then the route is skipped
-     * and the previous one is considered.
-     */
-    public static final int MODE_LAST_MATCH = 3;
+  /**
+   * Creates a new finder instance based on the "targetClass" property.
+   * 
+   * @param targetClass
+   *            The target Resource class to attach.
+   * @return The new finder instance.
+   */
+  Finder createFinder(Class<?> targetClass) {
+    return Finder.createFinder(targetClass, getFinderClass(), getContext(),
+                               getLogger());
+  }
 
-    /**
-     * Each call is be routed to the next route target if the required score is
-     * reached. The next route is relative to the previous call routed (round
-     * robin mode). If the required score is not reached, then the route is
-     * skipped and the next one is considered. If the last route is reached, the
-     * first route will be considered.
-     */
-    public static final int MODE_NEXT_MATCH = 4;
 
-    /**
-     * Each call will be randomly routed to one of the routes that reached the
-     * required score. If the random route selected is not a match then the
-     * immediate next route is evaluated until one matching route is found. If
-     * we get back to the initial random route selected with no match, then we
-     * return null.
-     */
-    public static final int MODE_RANDOM_MATCH = 5;
-
-    /**
-     * Each call is be routed to the next route target if the required score is
-     * reached. The next route is relative to the previous call routed (round
-     * robin mode). If the required score is not reached, then the route is
-     * skipped and the next one is considered. If the last route is reached, the
-     * first route will be considered.
-     * 
-     * @deprecated Use {@link #MODE_NEXT_MATCH} instead.
-     */
-    @Deprecated
-    public static final int NEXT = 4;
-
-    /**
-     * Each call will be randomly routed to one of the routes that reached the
-     * required score. If the random route selected is not a match then the
-     * immediate next route is evaluated until one matching route is found. If
-     * we get back to the initial random route selected with no match, then we
-     * return null.
-     * 
-     * @deprecated Use {@link #MODE_RANDOM_MATCH} instead.
-     */
-    @Deprecated
-    public static final int RANDOM = 5;
-
-    /** The default matching mode to use when selecting routes based on URIs. */
-    private volatile int defaultMatchingMode;
-
-    /**
-     * The default setting for whether the routing should be done on URIs with
-     * or without taking into account query string.
-     */
-    private volatile boolean defaultMatchingQuery;
-
-    /** The default route tested if no other one was available. */
-    @SuppressWarnings("deprecation")
-    private volatile Route defaultRoute;
-
-    /** Finder class to instantiate. */
-    private volatile Class<? extends Finder> finderClass;
-
-    /**
-     * The maximum number of attempts if no attachment could be matched on the
-     * first attempt.
-     */
-    private volatile int maxAttempts;
-
-    /** The minimum score required to have a match. */
-    private volatile float requiredScore;
-
-    /** The delay (in milliseconds) before a new attempt. */
-    private volatile long retryDelay;
-
-    /** The modifiable list of routes. */
-    private volatile RouteList routes;
-
-    /** The routing mode. */
-    private volatile int routingMode;
-
-    /**
-     * Constructor. Note that usage of this constructor is not recommended as
-     * the Router won't have a proper context set. In general you will prefer to
-     * use the other constructor and pass it the parent application's context or
-     * eventually the parent component's context if you don't use applications.
-     */
-    public Router() {
-        this(null);
+  /**
+   * Detaches the target from this router. All routes routing to this target
+   * Echo are removed from the list of routes and the default route is set
+   * to null.
+   * 
+   * @param target
+   *            The target Echo to detach.
+   */
+  void detach(echo::Echo target) {
+    getRoutes().removeAll(target);
+    if ((getDefaultRoute() != null)
+        && (getDefaultRoute().getNext() == target)) {
+      setDefaultRoute(null);
     }
+  }
 
-    /**
-     * Constructor.
-     * 
-     * @param context
-     *            The context.
-     */
-    public Router(Context context) {
-        super(context);
-        this.routes = new RouteList();
-        this.defaultMatchingMode = Template.MODE_EQUALS;
-        this.defaultMatchingQuery = false;
-        this.defaultRoute = null;
-        this.finderClass = Finder.class;
-        this.routingMode = MODE_FIRST_MATCH;
-        this.requiredScore = 0.5F;
-        this.maxAttempts = 1;
-        this.retryDelay = 500L;
-    }
 
-    /**
-     * Attaches a target Restlet to this router with an empty URI pattern. A new
-     * route will be added routing to the target when any call is received.
-     * 
-     * @param target
-     *            The target Restlet to attach.
-     * @return The created route.
-     */
-    @SuppressWarnings("deprecation")
-    public Route attach(Restlet target) {
-        return attach("", target);
-    }
+  /**
+   * Returns the default matching mode to use when selecting routes based on
+   * URIs. By default it returns {@link Template#MODE_EQUALS}.
+   * 
+   * @return The default matching mode.
+   */
+  int getDefaultMatchingMode() {
+    return defaultMatchingMode;
+  }
 
-    /**
-     * Attaches a target Resource class to this router based on a given URI
-     * pattern. A new route will be added routing to the target when calls with
-     * a URI matching the pattern will be received.
-     * 
-     * @param pathTemplate
-     *            The URI path template that must match the relative part of the
-     *            resource URI.
-     * @param targetClass
-     *            The target Resource class to attach.
-     * @return The created route.
-     */
-    @SuppressWarnings("deprecation")
-    public Route attach(String pathTemplate, Class<?> targetClass) {
-        return attach(pathTemplate, createFinder(targetClass));
-    }
-
-    /**
-     * Attaches a target Restlet to this router based on a given URI pattern. A
-     * new route will be added routing to the target when calls with a URI
-     * matching the pattern will be received.
-     * 
-     * @param pathTemplate
-     *            The URI path template that must match the relative part of the
-     *            resource URI.
-     * @param target
-     *            The target Restlet to attach.
-     * @return The created route.
-     */
-    @SuppressWarnings("deprecation")
-    public Route attach(String pathTemplate, Restlet target) {
-        final Route result = createRoute(pathTemplate, target);
-        getRoutes().add(result);
-        return result;
-    }
-
-    /**
-     * Attaches a Resource class to this router as the default target to invoke
-     * when no route matches. It actually sets a default route that scores all
-     * calls to 1.0.
-     * 
-     * @param defaultTargetClass
-     *            The target Resource class to attach.
-     * @return The created route.
-     */
-    @SuppressWarnings("deprecation")
-    public Route attachDefault(Class<?> defaultTargetClass) {
-        return attachDefault(createFinder(defaultTargetClass));
-    }
-
-    /**
-     * Attaches a Restlet to this router as the default target to invoke when no
-     * route matches. It actually sets a default route that scores all calls to
-     * 1.0.
-     * 
-     * @param defaultTarget
-     *            The Restlet to use as the default target.
-     * @return The created route.
-     */
-    @SuppressWarnings("deprecation")
-    public Route attachDefault(Restlet defaultTarget) {
-        Route result = createRoute("", defaultTarget);
-        result.setMatchingMode(Template.MODE_STARTS_WITH);
-        setDefaultRoute(result);
-        return result;
-    }
-
-    /**
-     * Creates a new finder instance based on the "targetClass" property.
-     * 
-     * @param targetClass
-     *            The target Resource class to attach.
-     * @return The new finder instance.
-     */
-    public Finder createFinder(Class<?> targetClass) {
-        return Finder.createFinder(targetClass, getFinderClass(), getContext(),
-                getLogger());
-    }
-
-    /**
-     * Creates a new route for the given URI pattern and target. If the target
-     * is a {@link Directory}, then the matching mode of the created
-     * {@link Route} is set to {@link Template#MODE_STARTS_WITH}, otherwise it
-     * uses the {@link #getDefaultMatchingMode()} result. The route will match
-     * the URI query string depending on the result of
-     * {@link #getDefaultMatchingQuery()}.
-     * 
-     * @param uriPattern
-     *            The URI pattern that must match the relative part of the
-     *            resource URI.
-     * @param target
-     *            The target Restlet to attach.
-     * @return The created route.
-     */
-    @SuppressWarnings("deprecation")
-    protected Route createRoute(String uriPattern, Restlet target) {
-        Route result = new Route(this, uriPattern, target);
-
-        if (target instanceof Directory) {
-            result.getTemplate().setMatchingMode(Template.MODE_STARTS_WITH);
-        } else {
-            result.getTemplate().setMatchingMode(getDefaultMatchingMode());
-        }
-
-        result.setMatchingQuery(getDefaultMatchingQuery());
-
-        return result;
-    }
-
-    /**
-     * Detaches the target from this router. All routes routing to this target
-     * Restlet are removed from the list of routes and the default route is set
-     * to null.
-     * 
-     * @param target
-     *            The target Restlet to detach.
-     */
-    public void detach(Restlet target) {
-        getRoutes().removeAll(target);
-        if ((getDefaultRoute() != null)
-                && (getDefaultRoute().getNext() == target)) {
-            setDefaultRoute(null);
-        }
-    }
-
-    /**
-     * Effectively handles the call using the selected next {@link Restlet},
-     * typically the selected {@link Route}. By default, it just invokes the
-     * next Restlet.
-     * 
-     * @param next
-     *            The next Restlet to invoke.
-     * @param request
-     *            The request.
-     * @param response
-     *            The response.
-     */
-    protected void doHandle(Restlet next, Request request, Response response) {
-        next.handle(request, response);
-    }
-
-    /**
-     * Returns the matched route according to a custom algorithm. To use in
-     * combination of the {@link #MODE_CUSTOM} option. The default
-     * implementation (to be overridden), returns null.
-     * 
-     * @param request
-     *            The request to handle.
-     * @param response
-     *            The response to update.
-     * @return The matched route if available or null.
-     */
-    @SuppressWarnings("deprecation")
-    protected Route getCustom(Request request, Response response) {
-        return null;
-    }
-
-    /**
-     * Returns the default matching mode to use when selecting routes based on
-     * URIs. By default it returns {@link Template#MODE_EQUALS}.
-     * 
-     * @return The default matching mode.
-     */
-    public int getDefaultMatchingMode() {
-        return this.defaultMatchingMode;
-    }
-
-    /**
-     * Returns the default setting for whether the routing should be done on
-     * URIs with or without taking into account query string. By default, it
-     * returns false.
-     * 
-     * @return the default setting for whether the routing should be done on
-     *         URIs with or without taking into account query string.
-     */
-    public boolean getDefaultMatchingQuery() {
-        return getDefaultMatchQuery();
-    }
+  /**
+   * Returns the default setting for whether the routing should be done on
+   * URIs with or without taking into account query string. By default, it
+   * returns false.
+   * 
+   * @return the default setting for whether the routing should be done on
+   *         URIs with or without taking into account query string.
+   */
+  bool getDefaultMatchingQuery() {
+    return getDefaultMatchQuery();
+  }
     
-    /**
-     * Returns the default setting for whether the routing should be done on
-     * URIs with or without taking into account query string. By default, it
-     * returns false.
-     * 
-     * @return the default setting for whether the routing should be done on
-     *         URIs with or without taking into account query string.
-      * @deprecated Use {@link #getDefaultMatchingQuery()} instead.
-     */
-    @Deprecated
-    public boolean getDefaultMatchQuery() {
-        return this.defaultMatchingQuery;
-    }
+  /**
+   * Returns the default setting for whether the routing should be done on
+   * URIs with or without taking into account query string. By default, it
+   * returns false.
+   * 
+   * @return the default setting for whether the routing should be done on
+   *         URIs with or without taking into account query string.
+   * @deprecated Use {@link #getDefaultMatchingQuery()} instead.
+   */
+  //@Deprecated
+  bool getDefaultMatchQuery() {
+    return defaultMatchingQuery;
+  }
 
-    /**
-     * Returns the default route to test if no other one was available after
-     * retrying the maximum number of attempts.
-     * 
-     * @return The default route tested if no other one was available.
-     */
-    @SuppressWarnings("deprecation")
-    public Route getDefaultRoute() {
-        return this.defaultRoute;
-    }
+  /**
+   * Returns the default route to test if no other one was available after
+   * retrying the maximum number of attempts.
+   * 
+   * @return The default route tested if no other one was available.
+   */
+  //@SuppressWarnings("deprecation")
+  Route getDefaultRoute() {
+    return defaultRoute;
+  }
 
-    /**
-     * Returns the finder class to instantiate.
-     * 
-     * @return the finder class to instantiate.
-     */
-    public Class<? extends Finder> getFinderClass() {
-        return this.finderClass;
-    }
+  /**
+   * Returns the finder class to instantiate.
+   * 
+   * @return the finder class to instantiate.
+   */
+  Class<? extends Finder> getFinderClass() {
+    return finderClass;
+  }
 
-    /**
-     * Returns the maximum number of attempts if no attachment could be matched
-     * on the first attempt. This is useful when the attachment scoring is
-     * dynamic and therefore could change on a retry. The default value is set
-     * to 1.
-     * 
-     * @return The maximum number of attempts if no attachment could be matched
-     *         on the first attempt.
-     */
-    public int getMaxAttempts() {
-        return this.maxAttempts;
-    }
+  /**
+   * Returns the maximum number of attempts if no attachment could be matched
+   * on the first attempt. This is useful when the attachment scoring is
+   * dynamic and therefore could change on a retry. The default value is set
+   * to 1.
+   * 
+   * @return The maximum number of attempts if no attachment could be matched
+   *         on the first attempt.
+   */
+  int getMaxAttempts() {
+    return maxAttempts;
+  }
 
-    /**
-     * Returns the next Restlet if available.
-     * 
-     * @param request
-     *            The request to handle.
-     * @param response
-     *            The response to update.
-     * @return The next Restlet if available or null.
-     */
-    @SuppressWarnings("deprecation")
-    public Restlet getNext(Request request, Response response) {
-        Route result = null;
+  /**
+   * Returns the next Echo if available.
+   * 
+   * @param request
+   *            The request to handle.
+   * @param response
+   *            The response to update.
+   * @return The next Echo if available or null.
+   */
+  //@SuppressWarnings("deprecation")
+  echo::Echo getNext(echo::Request request, echo::Response response) {
+    Route result = null;
 
-        for (int i = 0; (result == null) && (i < getMaxAttempts()); i++) {
-            if (i > 0) {
-                // Before attempting another time, let's
-                // sleep during the "retryDelay" set.
-                try {
-                    Thread.sleep(getRetryDelay());
-                } catch (InterruptedException e) {
-                }
-            }
-
-            if (this.routes != null) {
-                // Select the routing mode
-                switch (getRoutingMode()) {
-                case MODE_BEST_MATCH:
-                    result = getRoutes().getBest(request, response,
-                            getRequiredScore());
-                    break;
-
-                case MODE_FIRST_MATCH:
-                    result = getRoutes().getFirst(request, response,
-                            getRequiredScore());
-                    break;
-
-                case MODE_LAST_MATCH:
-                    result = getRoutes().getLast(request, response,
-                            getRequiredScore());
-                    break;
-
-                case MODE_NEXT_MATCH:
-                    result = getRoutes().getNext(request, response,
-                            getRequiredScore());
-                    break;
-
-                case MODE_RANDOM_MATCH:
-                    result = getRoutes().getRandom(request, response,
-                            getRequiredScore());
-                    break;
-
-                case MODE_CUSTOM:
-                    result = getCustom(request, response);
-                    break;
-                }
-            }
+    for (int i = 0; (result == null) && (i < getMaxAttempts()); i++) {
+      if (i > 0) {
+        // Before attempting another time, let's
+        // sleep during the "retryDelay" set.
+        try {
+          Thread.sleep(getRetryDelay());
+        } catch (InterruptedException e) {
         }
+      }
 
-        if (result == null) {
-            // If nothing matched in the routes list, check the default
-            // route
-            if ((getDefaultRoute() != null)
-                    && (getDefaultRoute().score(request, response) >= getRequiredScore())) {
-                result = getDefaultRoute();
-            } else {
-                // No route could be found
-                response.setStatus(Status.CLIENT_ERROR_NOT_FOUND);
-            }
+      if (routes != null) {
+        // Select the routing mode
+        switch (getRoutingMode()) {
+          case MODE_BEST_MATCH:
+            result = getRoutes().getBest(request, response,
+                                         getRequiredScore());
+            break;
+
+          case MODE_FIRST_MATCH:
+            result = getRoutes().getFirst(request, response,
+                                          getRequiredScore());
+            break;
+
+          case MODE_LAST_MATCH:
+            result = getRoutes().getLast(request, response,
+                                         getRequiredScore());
+            break;
+
+          case MODE_NEXT_MATCH:
+            result = getRoutes().getNext(request, response,
+                                         getRequiredScore());
+            break;
+
+          case MODE_RANDOM_MATCH:
+            result = getRoutes().getRandom(request, response,
+                                           getRequiredScore());
+            break;
+
+          case MODE_CUSTOM:
+            result = getCustom(request, response);
+            break;
         }
-
-        logRoute(result);
-        return result;
+      }
     }
 
-    /**
-     * Returns the minimum score required to have a match. By default, it
-     * returns {@code 0.5}.
-     * 
-     * @return The minimum score required to have a match.
-     */
-    public float getRequiredScore() {
-        return this.requiredScore;
+    if (result == null) {
+      // If nothing matched in the routes list, check the default
+      // route
+      if ((getDefaultRoute() != null)
+          && (getDefaultRoute().score(request, response) >= getRequiredScore())) {
+        result = getDefaultRoute();
+      } else {
+        // No route could be found
+        response.setStatus(Status.CLIENT_ERROR_NOT_FOUND);
+      }
     }
 
-    /**
-     * Returns the delay in milliseconds before a new attempt is made. The
-     * default value is {@code 500}.
-     * 
-     * @return The delay in milliseconds before a new attempt is made.
-     */
-    public long getRetryDelay() {
-        return this.retryDelay;
-    }
+    logRoute(result);
+    return result;
+  }
 
-    /**
-     * Returns the modifiable list of routes. Creates a new instance if no one
-     * has been set.
-     * 
-     * @return The modifiable list of routes.
-     */
-    public RouteList getRoutes() {
-        return this.routes;
-    }
+  /**
+   * Returns the minimum score required to have a match. By default, it
+   * returns {@code 0.5}.
+   * 
+   * @return The minimum score required to have a match.
+   */
+  float getRequiredScore() {
+    return requiredScore;
+  }
 
-    /**
-     * Returns the routing mode. By default, it returns the
-     * {@link #MODE_FIRST_MATCH} mode.
-     * 
-     * @return The routing mode.
-     */
-    public int getRoutingMode() {
-        return this.routingMode;
-    }
+  /**
+   * Returns the delay in milliseconds before a new attempt is made. The
+   * default value is {@code 500}.
+   * 
+   * @return The delay in milliseconds before a new attempt is made.
+   */
+  long getRetryDelay() {
+    return retryDelay;
+  }
 
-    /**
-     * Handles a call by invoking the next Restlet if it is available.
-     * 
-     * @param request
-     *            The request to handle.
-     * @param response
-     *            The response to update.
-     */
-    @Override
-    public void handle(Request request, Response response) {
-        super.handle(request, response);
+  /**
+   * Returns the modifiable list of routes. Creates a new instance if no one
+   * has been set.
+   * 
+   * @return The modifiable list of routes.
+   */
+  RouteList getRoutes() {
+    return routes;
+  }
 
-        Restlet next = getNext(request, response);
-        if (next != null) {
-            doHandle(next, request, response);
-        } else {
-            response.setStatus(Status.CLIENT_ERROR_NOT_FOUND);
-        }
-    }
+  /**
+   * Returns the routing mode. By default, it returns the
+   * {@link #MODE_FIRST_MATCH} mode.
+   * 
+   * @return The routing mode.
+   */
+  int getRoutingMode() {
+    return routingMode;
+  }
 
-    /**
-     * Logs the route selected.
-     * 
-     * @param route
-     *            The route selected.
-     */
-    @SuppressWarnings("deprecation")
-    protected void logRoute(Route route) {
-        if (getLogger().isLoggable(Level.FINE)) {
-            if (getDefaultRoute() == route) {
-                getLogger().fine("The default route was selected.");
-            } else {
-                getLogger().fine("This route was selected: \"" + route + "\"");
-            }
-        }
-    }
+  /**
+   * Handles a call by invoking the next Echo if it is available.
+   * 
+   * @param request
+   *            The request to handle.
+   * @param response
+   *            The response to update.
+   */
+  //@Override
+  void handle(echo::Request request, echo::Response response) {
+    super.handle(request, response);
 
-    /**
-     * Sets the default matching mode to use when selecting routes based on
-     * URIs. By default it is set to {@link Template#MODE_EQUALS}.
-     * 
-     * @param defaultMatchingMode
-     *            The default matching mode.
-     */
-    public void setDefaultMatchingMode(int defaultMatchingMode) {
-        this.defaultMatchingMode = defaultMatchingMode;
+    echo::Echo next = getNext(request, response);
+    if (next != null) {
+      doHandle(next, request, response);
+    } else {
+      response.setStatus(Status.CLIENT_ERROR_NOT_FOUND);
     }
+  }
 
-    /**
-     * Sets the default setting for whether the routing should be done on URIs
-     * with or without taking into account query string. By default, it is set
-     * to false.
-     * 
-     * @param defaultMatchingQuery
-     *            The default setting for whether the routing should be done on
-     *            URIs with or without taking into account query string.
-     *            
-     */
-    public void setDefaultMatchingQuery(boolean defaultMatchingQuery) {
-        setDefaultMatchQuery(defaultMatchingQuery);
-    }
 
-    /**
-     * Sets the default setting for whether the routing should be done on URIs
-     * with or without taking into account query string. By default, it is set
-     * to false.
-     * 
-     * @param defaultMatchingQuery
-     *            The default setting for whether the routing should be done on
-     *            URIs with or without taking into account query string.
-     * @deprecated Use {@link #setDefaultMatchingQuery(boolean)} instead.
-     */
-    @Deprecated
-    public void setDefaultMatchQuery(boolean defaultMatchingQuery) {
-        this.defaultMatchingQuery = defaultMatchingQuery;
-    }
+  /**
+   * Sets the default matching mode to use when selecting routes based on
+   * URIs. By default it is set to {@link Template#MODE_EQUALS}.
+   * 
+   * @param defaultMatchingMode
+   *            The default matching mode.
+   */
+  void setDefaultMatchingMode(int defaultMatchingMode) {
+    this->defaultMatchingMode = defaultMatchingMode;
+  }
+
+  /**
+   * Sets the default setting for whether the routing should be done on URIs
+   * with or without taking into account query string. By default, it is set
+   * to false.
+   * 
+   * @param defaultMatchingQuery
+   *            The default setting for whether the routing should be done on
+   *            URIs with or without taking into account query string.
+   *            
+   */
+  void setDefaultMatchingQuery(bool defaultMatchingQuery) {
+    setDefaultMatchQuery(defaultMatchingQuery);
+  }
+
+  /**
+   * Sets the default setting for whether the routing should be done on URIs
+   * with or without taking into account query string. By default, it is set
+   * to false.
+   * 
+   * @param defaultMatchingQuery
+   *            The default setting for whether the routing should be done on
+   *            URIs with or without taking into account query string.
+   * @deprecated Use {@link #setDefaultMatchingQuery(bool)} instead.
+   */
+  //@Deprecated
+  void setDefaultMatchQuery(bool defaultMatchingQuery) {
+    this->defaultMatchingQuery = defaultMatchingQuery;
+  }
     
-    /**
-     * Sets the default route tested if no other one was available.
-     * 
-     * @param defaultRoute
-     *            The default route tested if no other one was available.
-     */
-    @SuppressWarnings("deprecation")
-    public void setDefaultRoute(Route defaultRoute) {
-        this.defaultRoute = defaultRoute;
+  /**
+   * Sets the default route tested if no other one was available.
+   * 
+   * @param defaultRoute
+   *            The default route tested if no other one was available.
+   */
+  //@SuppressWarnings("deprecation")
+  void setDefaultRoute(Route defaultRoute) {
+    this->defaultRoute = defaultRoute;
+  }
+
+  /**
+   * Sets the finder class to instantiate.
+   * 
+   * @param finderClass
+   *            The finder class to instantiate.
+   */
+  void setFinderClass(Class<? extends Finder> finderClass) {
+    this->finderClass = finderClass;
+  }
+
+  /**
+   * Sets the maximum number of attempts if no attachment could be matched on
+   * the first attempt. This is useful when the attachment scoring is dynamic
+   * and therefore could change on a retry.
+   * 
+   * @param maxAttempts
+   *            The maximum number of attempts.
+   */
+  void setMaxAttempts(int maxAttempts) {
+    this->maxAttempts = maxAttempts;
+  }
+
+  /**
+   * Sets the score required to have a match. By default, it is set to {@code
+   * 0.5}.
+   * 
+   * @param score
+   *            The score required to have a match.
+   */
+  void setRequiredScore(float score) {
+    requiredScore = score;
+  }
+
+  /**
+   * Sets the delay in milliseconds before a new attempt is made. By default,
+   * it is set to {@code 500}.
+   * 
+   * @param retryDelay
+   *            The delay in milliseconds before a new attempt is made.
+   */
+  void setRetryDelay(long retryDelay) {
+    this->retryDelay = retryDelay;
+  }
+
+  /**
+   * Sets the modifiable list of routes.
+   * 
+   * @param routes
+   *            The modifiable list of routes.
+   */
+  void setRoutes(RouteList routes) {
+    this->routes = routes;
+  }
+
+  /**
+   * Sets the routing mode. By default, it is set to the
+   * {@link #MODE_FIRST_MATCH} mode.
+   * 
+   * @param routingMode
+   *            The routing mode.
+   */
+  void setRoutingMode(int routingMode) {
+    this->routingMode = routingMode;
+  }
+
+  /**
+   * Starts the filter and the attached routes.
+   */
+  //@SuppressWarnings("deprecation")
+  //@Override
+  synchronized void start() throws Exception {
+    if (isStopped()) {
+      super.start();
+
+      for (Route route : getRoutes()) {
+        route.start();
+      }
+
+      if (getDefaultRoute() != null) {
+        getDefaultRoute().start();
+      }
+    }
+  }
+
+  /**
+   * Stops the filter and the attached routes.
+   */
+  //@SuppressWarnings("deprecation")
+  //@Override
+  synchronized void stop() throws Exception {
+    if (isStarted()) {
+      if (getDefaultRoute() != null) {
+        getDefaultRoute().stop();
+      }
+
+      for (Route route : getRoutes()) {
+        route.stop();
+      }
+
+      super.stop();
+    }
+  }
+
+  
+ protected:
+  /**
+   * Creates a new route for the given URI pattern and target. If the target
+   * is a {@link Directory}, then the matching mode of the created
+   * {@link Route} is set to {@link Template#MODE_STARTS_WITH}, otherwise it
+   * uses the {@link #getDefaultMatchingMode()} result. The route will match
+   * the URI query string depending on the result of
+   * {@link #getDefaultMatchingQuery()}.
+   * 
+   * @param uriPattern
+   *            The URI pattern that must match the relative part of the
+   *            resource URI.
+   * @param target
+   *            The target Echo to attach.
+   * @return The created route.
+   */
+  //@SuppressWarnings("deprecation")
+  Route createRoute(std::string uriPattern, echo::Echo target) {
+    Route result = new Route(this, uriPattern, target);
+
+    if (target instanceof Directory) {
+      result.getTemplate().setMatchingMode(Template.MODE_STARTS_WITH);
+    } else {
+      result.getTemplate().setMatchingMode(getDefaultMatchingMode());
     }
 
-    /**
-     * Sets the finder class to instantiate.
-     * 
-     * @param finderClass
-     *            The finder class to instantiate.
-     */
-    public void setFinderClass(Class<? extends Finder> finderClass) {
-        this.finderClass = finderClass;
+    result.setMatchingQuery(getDefaultMatchingQuery());
+
+    return result;
+  }
+
+  /**
+   * Effectively handles the call using the selected next {@link Echo},
+   * typically the selected {@link Route}. By default, it just invokes the
+   * next Echo.
+   * 
+   * @param next
+   *            The next Echo to invoke.
+   * @param request
+   *            The request.
+   * @param response
+   *            The response.
+   */
+  void doHandle(echo::Echo next, echo::Request request, echo::Response response) {
+    next.handle(request, response);
+  }
+
+  /**
+   * Returns the matched route according to a custom algorithm. To use in
+   * combination of the {@link #MODE_CUSTOM} option. The default
+   * implementation (to be overridden), returns null.
+   * 
+   * @param request
+   *            The request to handle.
+   * @param response
+   *            The response to update.
+   * @return The matched route if available or null.
+   */
+  //@SuppressWarnings("deprecation")
+  Route getCustom(echo::Request request, echo::Response response) {
+    return null;
+  }
+
+  /**
+   * Logs the route selected.
+   * 
+   * @param route
+   *            The route selected.
+   */
+  //@SuppressWarnings("deprecation")
+  void logRoute(Route route) {
+    if (getLogger().isLoggable(Level.FINE)) {
+      if (getDefaultRoute() == route) {
+        getLogger().fine("The default route was selected.");
+      } else {
+        getLogger().fine("This route was selected: \"" + route + "\"");
+      }
     }
+  }
 
-    /**
-     * Sets the maximum number of attempts if no attachment could be matched on
-     * the first attempt. This is useful when the attachment scoring is dynamic
-     * and therefore could change on a retry.
-     * 
-     * @param maxAttempts
-     *            The maximum number of attempts.
-     */
-    public void setMaxAttempts(int maxAttempts) {
-        this.maxAttempts = maxAttempts;
-    }
 
-    /**
-     * Sets the score required to have a match. By default, it is set to {@code
-     * 0.5}.
-     * 
-     * @param score
-     *            The score required to have a match.
-     */
-    public void setRequiredScore(float score) {
-        this.requiredScore = score;
-    }
+ public:
+  
+  /**
+   * Each call will be routed to the route with the best score, if the
+   * required score is reached.
+   * 
+   * @deprecated Use {@link #MODE_BEST_MATCH} instead.
+   */
+  //@Deprecated
+  static const int BEST = 1;
 
-    /**
-     * Sets the delay in milliseconds before a new attempt is made. By default,
-     * it is set to {@code 500}.
-     * 
-     * @param retryDelay
-     *            The delay in milliseconds before a new attempt is made.
-     */
-    public void setRetryDelay(long retryDelay) {
-        this.retryDelay = retryDelay;
-    }
+  /**
+   * Each call will be routed according to a custom mode.
+   * 
+   * @deprecated Use {@link #MODE_CUSTOM} instead.
+   */
+  //@Deprecated
+  static const int CUSTOM = 6;
 
-    /**
-     * Sets the modifiable list of routes.
-     * 
-     * @param routes
-     *            The modifiable list of routes.
-     */
-    public void setRoutes(RouteList routes) {
-        this.routes = routes;
-    }
+  /**
+   * Each call is routed to the first route if the required score is reached.
+   * If the required score is not reached, then the route is skipped and the
+   * next one is considered.
+   * 
+   * @deprecated Use {@link #MODE_FIRST_MATCH} instead.
+   */
+  //@Deprecated
+  static const int FIRST = 2;
 
-    /**
-     * Sets the routing mode. By default, it is set to the
-     * {@link #MODE_FIRST_MATCH} mode.
-     * 
-     * @param routingMode
-     *            The routing mode.
-     */
-    public void setRoutingMode(int routingMode) {
-        this.routingMode = routingMode;
-    }
+  /**
+   * Each call will be routed to the last route if the required score is
+   * reached. If the required score is not reached, then the route is skipped
+   * and the previous one is considered.
+   * 
+   * @deprecated Use {@link #MODE_LAST_MATCH} instead.
+   */
+  //@Deprecated
+  static const int LAST = 3;
 
-    /**
-     * Starts the filter and the attached routes.
-     */
-    @SuppressWarnings("deprecation")
-    @Override
-    public synchronized void start() throws Exception {
-        if (isStopped()) {
-            super.start();
+  /**
+   * Each call will be routed to the route with the best score, if the
+   * required score is reached.
+   */
+  static const int MODE_BEST_MATCH = 1;
 
-            for (Route route : getRoutes()) {
-                route.start();
-            }
+  /**
+   * Each call will be routed according to a custom mode.
+   */
+  static const int MODE_CUSTOM = 6;
 
-            if (getDefaultRoute() != null) {
-                getDefaultRoute().start();
-            }
-        }
-    }
+  /**
+   * Each call is routed to the first route if the required score is reached.
+   * If the required score is not reached, then the route is skipped and the
+   * next one is considered.
+   */
+  static const int MODE_FIRST_MATCH = 2;
 
-    /**
-     * Stops the filter and the attached routes.
-     */
-    @SuppressWarnings("deprecation")
-    @Override
-    public synchronized void stop() throws Exception {
-        if (isStarted()) {
-            if (getDefaultRoute() != null) {
-                getDefaultRoute().stop();
-            }
+  /**
+   * Each call will be routed to the last route if the required score is
+   * reached. If the required score is not reached, then the route is skipped
+   * and the previous one is considered.
+   */
+  static const int MODE_LAST_MATCH = 3;
 
-            for (Route route : getRoutes()) {
-                route.stop();
-            }
+  /**
+   * Each call is be routed to the next route target if the required score is
+   * reached. The next route is relative to the previous call routed (round
+   * robin mode). If the required score is not reached, then the route is
+   * skipped and the next one is considered. If the last route is reached, the
+   * first route will be considered.
+   */
+  static const int MODE_NEXT_MATCH = 4;
 
-            super.stop();
-        }
-    }
+  /**
+   * Each call will be randomly routed to one of the routes that reached the
+   * required score. If the random route selected is not a match then the
+   * immediate next route is evaluated until one matching route is found. If
+   * we get back to the initial random route selected with no match, then we
+   * return null.
+   */
+  static const int MODE_RANDOM_MATCH = 5;
+
+  /**
+   * Each call is be routed to the next route target if the required score is
+   * reached. The next route is relative to the previous call routed (round
+   * robin mode). If the required score is not reached, then the route is
+   * skipped and the next one is considered. If the last route is reached, the
+   * first route will be considered.
+   * 
+   * @deprecated Use {@link #MODE_NEXT_MATCH} instead.
+   */
+  //@Deprecated
+  static const int NEXT = 4;
+
+  /**
+   * Each call will be randomly routed to one of the routes that reached the
+   * required score. If the random route selected is not a match then the
+   * immediate next route is evaluated until one matching route is found. If
+   * we get back to the initial random route selected with no match, then we
+   * return null.
+   * 
+   * @deprecated Use {@link #MODE_RANDOM_MATCH} instead.
+   */
+  //@Deprecated
+  static const int RANDOM = 5;
+
+ private:
+  
+  /** The default matching mode to use when selecting routes based on URIs. */
+  volatile int defaultMatchingMode;
+
+  /**
+   * The default setting for whether the routing should be done on URIs with
+   * or without taking into account query string.
+   */
+  volatile bool defaultMatchingQuery;
+
+  /** The default route tested if no other one was available. */
+  //@SuppressWarnings("deprecation")
+  volatile Route defaultRoute;
+
+  /** Finder class to instantiate. */
+  volatile Class<? extends Finder> finderClass;
+
+  /**
+   * The maximum number of attempts if no attachment could be matched on the
+   * first attempt.
+   */
+  volatile int maxAttempts;
+
+  /** The minimum score required to have a match. */
+  volatile float requiredScore;
+
+  /** The delay (in milliseconds) before a new attempt. */
+  volatile long retryDelay;
+
+  /** The modifiable list of routes. */
+  volatile RouteList routes;
+
+  /** The routing mode. */
+  volatile int routingMode;  
 
 }; 
 
