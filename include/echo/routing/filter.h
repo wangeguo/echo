@@ -1,24 +1,22 @@
 #ifndef _ECHO_ROUTING_FILTER_H_
 #define _ECHO_ROUTING_FILTER_H_
 
-/*
-import org.restlet.Context;
-import org.restlet.Request;
-import org.restlet.Response;
-import org.restlet.Restlet;
-import org.restlet.data.Status;
-import org.restlet.resource.Finder;
-import org.restlet.resource.ServerResource;
-*/
+#include <echo/context.h>
+#include <echo/request.h>
+#include <echo/response.h>
+#include <echo/echo.h>
+#include <echo/data/status.h>
+#include <echo/resource/finder.h>
+#include <echo/resource/server-resource.h>
 
 namespace echo {
 namespace routing {
 
 
 /**
- * Restlet filtering calls before passing them to an attached Restlet. The
+ * Echo filtering calls before passing them to an attached Echo. The
  * purpose is to do some pre-processing or post-processing on the calls going
- * through it before or after they are actually handled by an attached Restlet.
+ * through it before or after they are actually handled by an attached Echo.
  * Also note that you can attach and detach targets while handling incoming
  * calls as the filter is ensured to be thread-safe.<br>
  * <br>
@@ -28,244 +26,251 @@ namespace routing {
  * 
  * @author Jerome Louvel
  */
-//public abstract class Filter extends Restlet {
+//public abstract class Filter extends Echo {
 class Filter : public echo::Echo {
 
-    /**
-     * Indicates that the request processing should continue normally. If
-     * returned from the {@link #beforeHandle(Request, Response)} method, the
-     * filter then invokes the {@link #doHandle(Request, Response)} method. If
-     * returned from the {@link #doHandle(Request, Response)} method, the filter
-     * then invokes the {@link #afterHandle(Request, Response)} method.
-     */
-    public static final int CONTINUE = 0;
+ public:
+  
+  /**
+   * Constructor.
+   */
+  Filter() {
+    Filter(null);
+  }
 
-    /**
-     * Indicates that after the {@link #beforeHandle(Request, Response)} method,
-     * the request processing should skip the
-     * {@link #doHandle(Request, Response)} method to continue with the
-     * {@link #afterHandle(Request, Response)} method.
-     */
-    public static final int SKIP = 1;
+  /**
+   * Constructor.
+   * 
+   * @param context
+   *            The context.
+   */
+  Filter(Context context) {
+    Filter(context, null);
+  }
 
-    /**
-     * Indicates that the request processing should stop and return the current
-     * response from the filter.
-     */
-    public static final int STOP = 2;
+  /**
+   * Constructor.
+   * 
+   * @param context
+   *            The context.
+   * @param next
+   *            The next Echo.
+   */
+  Filter(Context context, echo::Echo next) {
+    super(context);
+    this->next = next;
+  }
 
-    /** The next Restlet. */
-    private volatile Restlet next;
+  /**
+   * Returns the next Echo.
+   * 
+   * @return The next Echo or null.
+   */
+  echo::Echo getNext() {
+    return next;
+  }
 
-    /**
-     * Constructor.
-     */
-    public Filter() {
-        this(null);
-    }
+  /**
+   * Handles a call by first invoking the beforeHandle() method for
+   * pre-filtering, then distributing the call to the next Echo via the
+   * doHandle() method. When the handling is completed, it finally invokes the
+   * afterHandle() method for post-filtering.
+   * 
+   * @param request
+   *            The request to handle.
+   * @param response
+   *            The response to update.
+   */
+  //@Override
+  const void handle(echo::Request request, echo::Response response) {
+    super.handle(request, response);
 
-    /**
-     * Constructor.
-     * 
-     * @param context
-     *            The context.
-     */
-    public Filter(Context context) {
-        this(context, null);
-    }
-
-    /**
-     * Constructor.
-     * 
-     * @param context
-     *            The context.
-     * @param next
-     *            The next Restlet.
-     */
-    public Filter(Context context, Restlet next) {
-        super(context);
-        this.next = next;
-    }
-
-    /**
-     * Allows filtering after processing by the next Restlet. Does nothing by
-     * default.
-     * 
-     * @param request
-     *            The request to handle.
-     * @param response
-     *            The response to update.
-     */
-    protected void afterHandle(Request request, Response response) {
-        // To be overriden
-    }
-
-    /**
-     * Allows filtering before processing by the next Restlet. Returns
-     * {@link #CONTINUE} by default.
-     * 
-     * @param request
-     *            The request to handle.
-     * @param response
-     *            The response to update.
-     * @return The continuation status. Either {@link #CONTINUE} or
-     *         {@link #SKIP} or {@link #STOP}.
-     */
-    protected int beforeHandle(Request request, Response response) {
-        return CONTINUE;
-    }
-
-    /**
-     * Handles the call by distributing it to the next Restlet. If no Restlet is
-     * attached, then a {@link Status#SERVER_ERROR_INTERNAL} status is returned.
-     * Returns {@link #CONTINUE} by default.
-     * 
-     * @param request
-     *            The request to handle.
-     * @param response
-     *            The response to update.
-     * @return The continuation status. Either {@link #CONTINUE} or
-     *         {@link #STOP}.
-     */
-    protected int doHandle(Request request, Response response) {
-        final int result = CONTINUE;
-
-        if (getNext() != null) {
-            getNext().handle(request, response);
-
-            // Re-associate the response to the current thread
-            Response.setCurrent(response);
-
-            // Associate the context to the current thread
-            if (getContext() != null) {
-                Context.setCurrent(getContext());
-            }
-        } else {
-            response.setStatus(Status.SERVER_ERROR_INTERNAL);
-            getLogger()
-                    .warning(
-                            "The filter "
-                                    + getName()
-                                    + " was executed without a next Restlet attached to it.");
-        }
-
-        return result;
-    }
-
-    /**
-     * Returns the next Restlet.
-     * 
-     * @return The next Restlet or null.
-     */
-    public Restlet getNext() {
-        return this.next;
-    }
-
-    /**
-     * Handles a call by first invoking the beforeHandle() method for
-     * pre-filtering, then distributing the call to the next Restlet via the
-     * doHandle() method. When the handling is completed, it finally invokes the
-     * afterHandle() method for post-filtering.
-     * 
-     * @param request
-     *            The request to handle.
-     * @param response
-     *            The response to update.
-     */
-    @Override
-    public final void handle(Request request, Response response) {
-        super.handle(request, response);
-
-        switch (beforeHandle(request, response)) {
-        case CONTINUE:
-            switch (doHandle(request, response)) {
-            case CONTINUE:
-                afterHandle(request, response);
-                break;
-
-            default:
-                // Stop the processing
-                break;
-            }
-            break;
-
-        case SKIP:
+    switch (beforeHandle(request, response)) {
+      case CONTINUE:
+        switch (doHandle(request, response)) {
+          case CONTINUE:
             afterHandle(request, response);
             break;
 
-        default:
+          default:
             // Stop the processing
             break;
         }
+        break;
 
+      case SKIP:
+        afterHandle(request, response);
+        break;
+
+      default:
+        // Stop the processing
+        break;
     }
 
-    /**
-     * Indicates if there is a next Restlet.
-     * 
-     * @return True if there is a next Restlet.
-     */
-    public boolean hasNext() {
-        return getNext() != null;
+  }
+
+  /**
+   * Indicates if there is a next Echo.
+   * 
+   * @return True if there is a next Echo.
+   */
+  bool hasNext() {
+    return getNext() != null;
+  }
+
+  /**
+   * Sets the next Echo as a Finder for a given
+   * {@link org.restlet.resource.Handler} or {@link ServerResource} class.
+   * When the call is delegated to the Finder instance, a new instance of the
+   * resource class will be created and will actually handle the request.
+   * 
+   * @param targetClass
+   *            The target resource class to attach.
+   */
+  void setNext(Class<?> targetClass) {
+    setNext(new Finder(getContext(), targetClass));
+  }
+
+  /**
+   * Sets the next Echo.
+   * 
+   * In addition, this method will set the context of the next Echo if it
+   * is null by passing a reference to its own context.
+   * 
+   * @param next
+   *            The next Echo.
+   */
+  void setNext(echo::Echo next) {
+    if ((next != null) && (next.getContext() == null)) {
+      next.setContext(getContext());
     }
 
-    /**
-     * Sets the next Restlet as a Finder for a given
-     * {@link org.restlet.resource.Handler} or {@link ServerResource} class.
-     * When the call is delegated to the Finder instance, a new instance of the
-     * resource class will be created and will actually handle the request.
-     * 
-     * @param targetClass
-     *            The target resource class to attach.
-     */
-    public void setNext(Class<?> targetClass) {
-        setNext(new Finder(getContext(), targetClass));
+    this->next = next;
+  }
+
+  /**
+   * Starts the filter and the next Echo if attached.
+   */
+  //@Override
+  synchronized void start() throws Exception {
+    if (isStopped()) {
+      super.start();
+
+      if (getNext() != null) {
+        getNext().start();
+      }
+    }
+  }
+
+  /**
+   * Stops the filter and the next Echo if attached.
+   */
+  //@Override
+  synchronized void stop() throws Exception {
+    if (isStarted()) {
+      if (getNext() != null) {
+        getNext().stop();
+      }
+
+      super.stop();
+    }
+  }
+
+
+ protected:  
+  /**
+   * Allows filtering after processing by the next Echo. Does nothing by
+   * default.
+   * 
+   * @param request
+   *            The request to handle.
+   * @param response
+   *            The response to update.
+   */
+  void afterHandle(echo::Request request, echo::Response response) {
+    // To be overriden
+  }
+
+  /**
+   * Allows filtering before processing by the next Echo. Returns
+   * {@link #CONTINUE} by default.
+   * 
+   * @param request
+   *            The request to handle.
+   * @param response
+   *            The response to update.
+   * @return The continuation status. Either {@link #CONTINUE} or
+   *         {@link #SKIP} or {@link #STOP}.
+   */
+  int beforeHandle(echo::Request request, echo::Response response) {
+    return CONTINUE;
+  }
+
+  /**
+   * Handles the call by distributing it to the next Echo. If no Echo is
+   * attached, then a {@link Status#SERVER_ERROR_INTERNAL} status is returned.
+   * Returns {@link #CONTINUE} by default.
+   * 
+   * @param request
+   *            The request to handle.
+   * @param response
+   *            The response to update.
+   * @return The continuation status. Either {@link #CONTINUE} or
+   *         {@link #STOP}.
+   */
+  int doHandle(echo::Request request, echo::Response response) {
+    const int result = CONTINUE;
+
+    if (getNext() != null) {
+      getNext().handle(request, response);
+
+      // Re-associate the response to the current thread
+      echo::Response.setCurrent(response);
+
+      // Associate the context to the current thread
+      if (getContext() != null) {
+        Context.setCurrent(getContext());
+      }
+    } else {
+      response.setStatus(Status.SERVER_ERROR_INTERNAL);
+      getLogger()
+          .warning(
+              "The filter "
+              + getName()
+              + " was executed without a next Echo attached to it.");
     }
 
-    /**
-     * Sets the next Restlet.
-     * 
-     * In addition, this method will set the context of the next Restlet if it
-     * is null by passing a reference to its own context.
-     * 
-     * @param next
-     *            The next Restlet.
-     */
-    public void setNext(Restlet next) {
-        if ((next != null) && (next.getContext() == null)) {
-            next.setContext(getContext());
-        }
+    return result;
+  }
+  
 
-        this.next = next;
-    }
+ public:
+  /**
+   * Indicates that the request processing should continue normally. If
+   * returned from the {@link #beforeHandle(echo::Request, echo::Response)} method, the
+   * filter then invokes the {@link #doHandle(echo::Request, echo::Response)} method. If
+   * returned from the {@link #doHandle(echo::Request, echo::Response)} method, the filter
+   * then invokes the {@link #afterHandle(echo::Request, echo::Response)} method.
+   */
+  static const int CONTINUE = 0;
 
-    /**
-     * Starts the filter and the next Restlet if attached.
-     */
-    @Override
-    public synchronized void start() throws Exception {
-        if (isStopped()) {
-            super.start();
+  /**
+   * Indicates that after the {@link #beforeHandle(echo::Request, echo::Response)} method,
+   * the request processing should skip the
+   * {@link #doHandle(echo::Request, echo::Response)} method to continue with the
+   * {@link #afterHandle(echo::Request, echo::Response)} method.
+   */
+  static const int SKIP = 1;
 
-            if (getNext() != null) {
-                getNext().start();
-            }
-        }
-    }
+  /**
+   * Indicates that the request processing should stop and return the current
+   * response from the filter.
+   */
+  static const int STOP = 2;
 
-    /**
-     * Stops the filter and the next Restlet if attached.
-     */
-    @Override
-    public synchronized void stop() throws Exception {
-        if (isStarted()) {
-            if (getNext() != null) {
-                getNext().stop();
-            }
-
-            super.stop();
-        }
-    }
+ private:
+  /** The next Echo. */
+  volatile echo::Echo next;
 
 };
 

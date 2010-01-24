@@ -1,18 +1,17 @@
 #ifndef _ECHO_ROUTING_REDIRECTOR_H_
 #define _ECHO_ROUTING_REDIRECTOR_H_
 
-/*
-  import java.util.logging.Level;
+#include <string>
 
-import org.restlet.Client;
-import org.restlet.Context;
-import org.restlet.Request;
-import org.restlet.Response;
-import org.restlet.Restlet;
-import org.restlet.data.Reference;
-import org.restlet.data.Status;
-import org.restlet.representation.Representation;
-*/
+#include <echo/client.h>
+#include <echo/context.h>
+#include <echo/request.h>
+#include <echo/response.h>
+#include <echo/echo.h>
+#include <echo/data/reference.h>
+#include <echo/data/status.h>
+#include <echo/representation/representation.h>
+#include <echo/util/logging/level.h>
 
 namespace echo {
 namespace routing {
@@ -29,373 +28,386 @@ namespace routing {
  * several threads at the same time and therefore must be thread-safe. You
  * should be especially careful when storing state in member variables.
  * 
- * @see org.restlet.routing.Template
+ * @see echo::routing::Template
  * @see <a
  *      href="http://www.restlet.org/documentation/2.0/tutorial#part10">Tutorial:
  *      URI rewriting and redirection</a>
  * @author Jerome Louvel
  */
 class Redirector : public echo::Echo {
-    /**
-     * In this mode, the client is permanently redirected to the URI generated
-     * from the target URI pattern.<br>
-     * 
-     * @see Status#REDIRECTION_PERMANENT
-     */
-    public static final int MODE_CLIENT_PERMANENT = 1;
 
-    /**
-     * In this mode, the client is simply redirected to the URI generated from
-     * the target URI pattern.<br>
-     * 
-     * @see Status#REDIRECTION_FOUND
-     */
-    public static final int MODE_CLIENT_FOUND = 2;
+ public:
+  /**
+   * Constructor for the client dispatcher mode.
+   * 
+   * @param context
+   *            The context.
+   * @param targetTemplate
+   *            The template to build the target URI.
+   * @see echo::::routing::Template
+   */
+  Redirector(echo::Context context, std::string targetTemplate) {
+    Redirector(context, targetTemplate, MODE_CLIENT_DISPATCHER);
+  }
 
-    /**
-     * In this mode, the client is simply redirected to the URI generated from
-     * the target URI pattern.<br>
-     * 
-     * @see Status#REDIRECTION_SEE_OTHER
-     */
-    public static final int MODE_CLIENT_SEE_OTHER = 3;
+  /**
+   * Constructor.
+   * 
+   * @param context
+   *            The context.
+   * @param targetPattern
+   *            The pattern to build the target URI (using std::stringTemplate
+   *            syntax and the CallModel for variables).
+   * @param mode
+   *            The redirection mode.
+   */
+  Redirector(echo::Context context, std::string targetPattern, int mode) {
+    echo::Echo(context);
+    this.targetTemplate = targetPattern;
+    this.mode = mode;
+  }
 
-    /**
-     * In this mode, the client is temporarily redirected to the URI generated
-     * from the target URI pattern.<br>
-     * 
-     * @see Status#REDIRECTION_TEMPORARY
-     */
-    public static final int MODE_CLIENT_TEMPORARY = 4;
+  /**
+   * Returns the redirection mode.
+   * 
+   * @return The redirection mode.
+   */
+  int getMode() {
+    return this.mode;
+  }
 
-    /**
-     * In this mode, the call is sent to the context's dispatcher. Once the
-     * selected client connector has completed the request handling, the
-     * response is normally returned to the client. In this case, you can view
-     * the Redirector as acting as a transparent proxy Restlet.<br>
-     * <br>
-     * Remember to add the required connectors to the parent Component and to
-     * declare them in the list of required connectors on the
-     * Application.connectorService property.<br>
-     * <br>
-     * Note that in this mode, the headers of HTTP requests, stored in the
-     * request's attributes, are removed before dispatching. Also, when a HTTP
-     * response comes back the headers are also removed.
-     * 
-     * @deprecated Use the {@link Redirector#MODE_CLIENT_DISPATCHER} instead.
-     */
-    @Deprecated
-    public static final int MODE_DISPATCHER = 5;
+  /**
+   * Returns the target URI pattern.
+   * 
+   * @return The target URI pattern.
+   */
+  std::string getTargetTemplate() {
+    return this.targetTemplate;
+  }
 
-    /**
-     * In this mode, the call is sent to the context's client dispatcher. Once
-     * the selected client connector has completed the request handling, the
-     * response is normally returned to the client. In this case, you can view
-     * the Redirector as acting as a transparent proxy Restlet.<br>
-     * <br>
-     * Remember to add the required connectors to the parent Component and to
-     * declare them in the list of required connectors on the
-     * Application.connectorService property.<br>
-     * <br>
-     * Note that in this mode, the headers of HTTP requests, stored in the
-     * request's attributes, are removed before dispatching. Also, when a HTTP
-     * response comes back the headers are also removed.
-     * 
-     * @see Context#getClientDispatcher()
-     */
-    public static final int MODE_CLIENT_DISPATCHER = 6;
+  /**
+   * Handles a call by redirecting using the selected redirection mode.
+   * 
+   * @param request
+   *            The request to handle.
+   * @param response
+   *            The response to update.
+   */
+  //@Override
+  void handle(echo::Request request, echo::Response response) {
+    // Generate the target reference
+    const Reference targetRef = getTargetRef(request, response);
 
-    /**
-     * In this mode, the call is sent to the context's server dispatcher. Once
-     * the selected client connector has completed the request handling, the
-     * response is normally returned to the client. In this case, you can view
-     * the Redirector as acting as a transparent proxy Restlet.<br>
-     * <br>
-     * Remember to add the required connectors to the parent Component and to
-     * declare them in the list of required connectors on the
-     * Application.connectorService property.<br>
-     * <br>
-     * Note that in this mode, the headers of HTTP requests, stored in the
-     * request's attributes, are removed before dispatching. Also, when a HTTP
-     * response comes back the headers are also removed.
-     * 
-     * @see Context#getServerDispatcher()
-     */
-    public static final int MODE_SERVER_DISPATCHER = 7;
+    switch (this.mode) {
+      case MODE_CLIENT_PERMANENT:
+        getLogger().log(Level.INFO,
+                        "Permanently redirecting client to: " + targetRef);
+        response.redirectPermanent(targetRef);
+        break;
 
-    /** The target URI pattern. */
-    protected volatile String targetTemplate;
+      case MODE_CLIENT_FOUND:
+        getLogger().log(Level.INFO,
+                        "Redirecting client to found location: " + targetRef);
+        response.setLocationRef(targetRef);
+        response.setStatus(Status.REDIRECTION_FOUND);
+        break;
 
-    /** The redirection mode. */
-    protected volatile int mode;
+      case MODE_CLIENT_SEE_OTHER:
+        getLogger().log(Level.INFO,
+                        "Redirecting client to another location: " + targetRef);
+        response.setLocationRef(targetRef);
+        response.setStatus(Status.REDIRECTION_SEE_OTHER);
+        break;
 
-    /**
-     * Constructor for the client dispatcher mode.
-     * 
-     * @param context
-     *            The context.
-     * @param targetTemplate
-     *            The template to build the target URI.
-     * @see org.restlet.routing.Template
-     */
-    public Redirector(Context context, String targetTemplate) {
-        this(context, targetTemplate, MODE_CLIENT_DISPATCHER);
-    }
+      case MODE_CLIENT_TEMPORARY:
+        getLogger().log(Level.INFO,
+                        "Temporarily redirecting client to: " + targetRef);
+        response.redirectTemporary(targetRef);
+        break;
 
-    /**
-     * Constructor.
-     * 
-     * @param context
-     *            The context.
-     * @param targetPattern
-     *            The pattern to build the target URI (using StringTemplate
-     *            syntax and the CallModel for variables).
-     * @param mode
-     *            The redirection mode.
-     */
-    public Redirector(Context context, String targetPattern, int mode) {
-        super(context);
-        this.targetTemplate = targetPattern;
-        this.mode = mode;
-    }
+      case MODE_DISPATCHER:
+        getLogger().log(Level.INFO,
+                        "Redirecting via client connector to: " + targetRef);
+        redirectDispatcher(targetRef, request, response);
+        break;
 
-    /**
-     * Returns the redirection mode.
-     * 
-     * @return The redirection mode.
-     */
-    public int getMode() {
-        return this.mode;
-    }
-
-    /**
-     * Returns the target reference to redirect to.
-     * 
-     * @param request
-     *            The request to handle.
-     * @param response
-     *            The response to update.
-     * @return The target reference to redirect to.
-     */
-    protected Reference getTargetRef(Request request, Response response) {
-        // Create the template
-        final Template rt = new Template(this.targetTemplate);
-        rt.setLogger(getLogger());
-
-        // Return the formatted target URI
-        return new Reference(rt.format(request, response));
-    }
-
-    /**
-     * Returns the target URI pattern.
-     * 
-     * @return The target URI pattern.
-     */
-    public String getTargetTemplate() {
-        return this.targetTemplate;
-    }
-
-    /**
-     * Handles a call by redirecting using the selected redirection mode.
-     * 
-     * @param request
-     *            The request to handle.
-     * @param response
-     *            The response to update.
-     */
-    @Override
-    public void handle(Request request, Response response) {
-        // Generate the target reference
-        final Reference targetRef = getTargetRef(request, response);
-
-        switch (this.mode) {
-        case MODE_CLIENT_PERMANENT:
-            getLogger().log(Level.INFO,
-                    "Permanently redirecting client to: " + targetRef);
-            response.redirectPermanent(targetRef);
-            break;
-
-        case MODE_CLIENT_FOUND:
-            getLogger().log(Level.INFO,
-                    "Redirecting client to found location: " + targetRef);
-            response.setLocationRef(targetRef);
-            response.setStatus(Status.REDIRECTION_FOUND);
-            break;
-
-        case MODE_CLIENT_SEE_OTHER:
-            getLogger().log(Level.INFO,
-                    "Redirecting client to another location: " + targetRef);
-            response.setLocationRef(targetRef);
-            response.setStatus(Status.REDIRECTION_SEE_OTHER);
-            break;
-
-        case MODE_CLIENT_TEMPORARY:
-            getLogger().log(Level.INFO,
-                    "Temporarily redirecting client to: " + targetRef);
-            response.redirectTemporary(targetRef);
-            break;
-
-        case MODE_DISPATCHER:
-            getLogger().log(Level.INFO,
-                    "Redirecting via client connector to: " + targetRef);
-            redirectDispatcher(targetRef, request, response);
-            break;
-
-        case MODE_CLIENT_DISPATCHER:
-            getLogger().log(Level.INFO,
-                    "Redirecting via client dispatcher to: " + targetRef);
-            redirectClientDispatcher(targetRef, request, response);
-            break;
-
-        case MODE_SERVER_DISPATCHER:
-            getLogger().log(Level.INFO,
-                    "Redirecting via server dispatcher to: " + targetRef);
-            redirectServerDispatcher(targetRef, request, response);
-            break;
-        }
-    }
-
-    /**
-     * Redirects a given call to a target reference. In the default
-     * implementation, the request HTTP headers, stored in the request's
-     * attributes, are removed before dispatching. After dispatching, the
-     * response HTTP headers are also removed to prevent conflicts with the main
-     * call.
-     * 
-     * @param targetRef
-     *            The target reference with URI variables resolved.
-     * @param request
-     *            The request to handle.
-     * @param response
-     *            The response to update.
-     */
-    protected void redirectClientDispatcher(Reference targetRef,
-            Request request, Response response) {
-        redirectDispatcher(getContext().getClientDispatcher(), targetRef,
-                request, response);
-    }
-
-    /**
-     * Redirects a given call to a target reference. In the default
-     * implementation, the request HTTP headers, stored in the request's
-     * attributes, are removed before dispatching. After dispatching, the
-     * response HTTP headers are also removed to prevent conflicts with the main
-     * call.
-     * 
-     * @param targetRef
-     *            The target reference with URI variables resolved.
-     * @param request
-     *            The request to handle.
-     * @param response
-     *            The response to update.
-     */
-    private void redirectDispatcher(Client dispatcher, Reference targetRef,
-            Request request, Response response) {
-        // Save the base URI if it exists as we might need it for redirections
-        final Reference baseRef = request.getResourceRef().getBaseRef();
-
-        // Update the request to cleanly go to the target URI
-        request.setResourceRef(targetRef);
-        request.getAttributes().remove("org.restlet.http.headers");
-        dispatcher.handle(request, response);
-
-        // Allow for response rewriting and clean the headers
-        response.setEntity(rewrite(response.getEntity()));
-        response.getAttributes().remove("org.restlet.http.headers");
-
-        // In case of redirection, we may have to rewrite the redirect URI
-        if (response.getLocationRef() != null) {
-            final Template rt = new Template(this.targetTemplate);
-            rt.setLogger(getLogger());
-            final int matched = rt.parse(response.getLocationRef().toString(),
-                    request);
-
-            if (matched > 0) {
-                final String remainingPart = (String) request.getAttributes()
-                        .get("rr");
-
-                if (remainingPart != null) {
-                    response.setLocationRef(baseRef.toString() + remainingPart);
-                }
-            }
-        }
-    }
-
-    /**
-     * Redirects a given call to a target reference. In the default
-     * implementation, the request HTTP headers, stored in the request's
-     * attributes, are removed before dispatching. After dispatching, the
-     * response HTTP headers are also removed to prevent conflicts with the main
-     * call.
-     * 
-     * @param targetRef
-     *            The target reference with URI variables resolved.
-     * @param request
-     *            The request to handle.
-     * @param response
-     *            The response to update.
-     * @deprecated Use
-     *             {@link #redirectClientDispatcher(Reference, Request, Response)}
-     *             instead.
-     */
-    @Deprecated
-    protected void redirectDispatcher(Reference targetRef, Request request,
-            Response response) {
+      case MODE_CLIENT_DISPATCHER:
+        getLogger().log(Level.INFO,
+                        "Redirecting via client dispatcher to: " + targetRef);
         redirectClientDispatcher(targetRef, request, response);
-    }
+        break;
 
-    /**
-     * Redirects a given call to a target reference. In the default
-     * implementation, the request HTTP headers, stored in the request's
-     * attributes, are removed before dispatching. After dispatching, the
-     * response HTTP headers are also removed to prevent conflicts with the main
-     * call.
-     * 
-     * @param targetRef
-     *            The target reference with URI variables resolved.
-     * @param request
-     *            The request to handle.
-     * @param response
-     *            The response to update.
-     */
-    protected void redirectServerDispatcher(Reference targetRef,
-            Request request, Response response) {
-        redirectDispatcher(getContext().getServerDispatcher(), targetRef,
-                request, response);
+      case MODE_SERVER_DISPATCHER:
+        getLogger().log(Level.INFO,
+                        "Redirecting via server dispatcher to: " + targetRef);
+        redirectServerDispatcher(targetRef, request, response);
+        break;
     }
+  }
 
-    /**
-     * Optionally rewrites the response entity returned in the MODE_CONNECTOR
-     * mode. By default, it just returns the initial entity without any
-     * modification.
-     * 
-     * @param initialEntity
-     *            The initial entity returned.
-     * @return The rewritten entity.
-     */
-    protected Representation rewrite(Representation initialEntity) {
-        return initialEntity;
-    }
 
-    /**
-     * Sets the redirection mode.
-     * 
-     * @param mode
-     *            The redirection mode.
-     */
-    public void setMode(int mode) {
-        this.mode = mode;
-    }
+  /**
+   * Sets the redirection mode.
+   * 
+   * @param mode
+   *            The redirection mode.
+   */
+  void setMode(int mode) {
+    this.mode = mode;
+  }
 
-    /**
-     * Sets the target URI pattern.
-     * 
-     * @param targetTemplate
-     *            The target URI pattern.
-     */
-    public void setTargetTemplate(String targetTemplate) {
-        this.targetTemplate = targetTemplate;
+  /**
+   * Sets the target URI pattern.
+   * 
+   * @param targetTemplate
+   *            The target URI pattern.
+   */
+  void setTargetTemplate(std::string targetTemplate) {
+    this.targetTemplate = targetTemplate;
+  }
+
+ protected:
+  /**
+   * Redirects a given call to a target reference. In the default
+   * implementation, the request HTTP headers, stored in the request's
+   * attributes, are removed before dispatching. After dispatching, the
+   * response HTTP headers are also removed to prevent conflicts with the main
+   * call.
+   * 
+   * @param targetRef
+   *            The target reference with URI variables resolved.
+   * @param request
+   *            The request to handle.
+   * @param response
+   *            The response to update.
+   */
+  void redirectClientDispatcher(Reference targetRef,
+                                echo::Request request, echo::Response response) {
+    redirectDispatcher(getContext().getClientDispatcher(), targetRef,
+                       request, response);
+  }
+
+  /**
+   * Redirects a given call to a target reference. In the default
+   * implementation, the request HTTP headers, stored in the request's
+   * attributes, are removed before dispatching. After dispatching, the
+   * response HTTP headers are also removed to prevent conflicts with the main
+   * call.
+   * 
+   * @param targetRef
+   *            The target reference with URI variables resolved.
+   * @param request
+   *            The request to handle.
+   * @param response
+   *            The response to update.
+   * @deprecated Use
+   *             {@link #redirectClientDispatcher(Reference, echo::Request, echo::Response)}
+   *             instead.
+   */
+  //@Deprecated
+  void redirectDispatcher(Reference targetRef, echo::Request request,
+                          echo::Response response) {
+    redirectClientDispatcher(targetRef, request, response);
+  }
+
+  /**
+   * Redirects a given call to a target reference. In the default
+   * implementation, the request HTTP headers, stored in the request's
+   * attributes, are removed before dispatching. After dispatching, the
+   * response HTTP headers are also removed to prevent conflicts with the main
+   * call.
+   * 
+   * @param targetRef
+   *            The target reference with URI variables resolved.
+   * @param request
+   *            The request to handle.
+   * @param response
+   *            The response to update.
+   */
+  void redirectServerDispatcher(Reference targetRef,
+                                echo::Request request, echo::Response response) {
+    redirectDispatcher(getContext().getServerDispatcher(), targetRef,
+                       request, response);
+  }
+
+  /**
+   * Optionally rewrites the response entity returned in the MODE_CONNECTOR
+   * mode. By default, it just returns the initial entity without any
+   * modification.
+   * 
+   * @param initialEntity
+   *            The initial entity returned.
+   * @return The rewritten entity.
+   */
+  Representation rewrite(Representation initialEntity) {
+    return initialEntity;
+  }
+
+  
+  /**
+   * Returns the target reference to redirect to.
+   * 
+   * @param request
+   *            The request to handle.
+   * @param response
+   *            The response to update.
+   * @return The target reference to redirect to.
+   */
+  Reference getTargetRef(echo::Request request, echo::Response response) {
+    // Create the template
+    const Template rt = new Template(this.targetTemplate);
+    rt.setLogger(getLogger());
+
+    // Return the formatted target URI
+    return new Reference(rt.format(request, response));
+  }
+
+ private:
+
+
+  /**
+   * Redirects a given call to a target reference. In the default
+   * implementation, the request HTTP headers, stored in the request's
+   * attributes, are removed before dispatching. After dispatching, the
+   * response HTTP headers are also removed to prevent conflicts with the main
+   * call.
+   * 
+   * @param targetRef
+   *            The target reference with URI variables resolved.
+   * @param request
+   *            The request to handle.
+   * @param response
+   *            The response to update.
+   */
+  void redirectDispatcher(Client dispatcher, Reference targetRef,
+                          echo::Request request, echo::Response response) {
+    // Save the base URI if it exists as we might need it for redirections
+    const Reference baseRef = request.getResourceRef().getBaseRef();
+
+    // Update the request to cleanly go to the target URI
+    request.setResourceRef(targetRef);
+    request.getAttributes().remove("org.restlet.http.headers");
+    dispatcher.handle(request, response);
+
+    // Allow for response rewriting and clean the headers
+    response.setEntity(rewrite(response.getEntity()));
+    response.getAttributes().remove("org.restlet.http.headers");
+
+    // In case of redirection, we may have to rewrite the redirect URI
+    if (response.getLocationRef() != null) {
+      const Template rt = new Template(this.targetTemplate);
+      rt.setLogger(getLogger());
+      const int matched = rt.parse(response.getLocationRef().toString(),
+                                   request);
+
+      if (matched > 0) {
+        const std::string remainingPart = (std::string) request.getAttributes()
+                                          .get("rr");
+
+        if (remainingPart != null) {
+          response.setLocationRef(baseRef.toString() + remainingPart);
+        }
+      }
     }
+  }
+
+
+
+ public:
+  /**
+   * In this mode, the client is permanently redirected to the URI generated
+   * from the target URI pattern.<br>
+   * 
+   * @see Status#REDIRECTION_PERMANENT
+   */
+  static const int MODE_CLIENT_PERMANENT = 1;
+
+  /**
+   * In this mode, the client is simply redirected to the URI generated from
+   * the target URI pattern.<br>
+   * 
+   * @see Status#REDIRECTION_FOUND
+   */
+  static const int MODE_CLIENT_FOUND = 2;
+
+  /**
+   * In this mode, the client is simply redirected to the URI generated from
+   * the target URI pattern.<br>
+   * 
+   * @see Status#REDIRECTION_SEE_OTHER
+   */
+  static const int MODE_CLIENT_SEE_OTHER = 3;
+
+  /**
+   * In this mode, the client is temporarily redirected to the URI generated
+   * from the target URI pattern.<br>
+   * 
+   * @see Status#REDIRECTION_TEMPORARY
+   */
+  static const int MODE_CLIENT_TEMPORARY = 4;
+
+  /**
+   * In this mode, the call is sent to the context's dispatcher. Once the
+   * selected client connector has completed the request handling, the
+   * response is normally returned to the client. In this case, you can view
+   * the Redirector as acting as a transparent proxy Echo.<br>
+   * <br>
+   * Remember to add the required connectors to the parent Component and to
+   * declare them in the list of required connectors on the
+   * Application.connectorService property.<br>
+   * <br>
+   * Note that in this mode, the headers of HTTP requests, stored in the
+   * request's attributes, are removed before dispatching. Also, when a HTTP
+   * response comes back the headers are also removed.
+   * 
+   * @deprecated Use the {@link Redirector#MODE_CLIENT_DISPATCHER} instead.
+   */
+  //@Deprecated
+  static const int MODE_DISPATCHER = 5;
+
+  /**
+   * In this mode, the call is sent to the context's client dispatcher. Once
+   * the selected client connector has completed the request handling, the
+   * response is normally returned to the client. In this case, you can view
+   * the Redirector as acting as a transparent proxy Echo.<br>
+   * <br>
+   * Remember to add the required connectors to the parent Component and to
+   * declare them in the list of required connectors on the
+   * Application.connectorService property.<br>
+   * <br>
+   * Note that in this mode, the headers of HTTP requests, stored in the
+   * request's attributes, are removed before dispatching. Also, when a HTTP
+   * response comes back the headers are also removed.
+   * 
+   * @see Context#getClientDispatcher()
+   */
+  static const int MODE_CLIENT_DISPATCHER = 6;
+
+  /**
+   * In this mode, the call is sent to the context's server dispatcher. Once
+   * the selected client connector has completed the request handling, the
+   * response is normally returned to the client. In this case, you can view
+   * the Redirector as acting as a transparent proxy Echo.<br>
+   * <br>
+   * Remember to add the required connectors to the parent Component and to
+   * declare them in the list of required connectors on the
+   * Application.connectorService property.<br>
+   * <br>
+   * Note that in this mode, the headers of HTTP requests, stored in the
+   * request's attributes, are removed before dispatching. Also, when a HTTP
+   * response comes back the headers are also removed.
+   * 
+   * @see Context#getServerDispatcher()
+   */
+  static const int MODE_SERVER_DISPATCHER = 7;
+
+ protected:
+  /** The target URI pattern. */
+  volatile std::string targetTemplate;
+
+  /** The redirection mode. */
+  volatile int mode;
+
 
 };
 

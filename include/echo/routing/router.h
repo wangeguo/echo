@@ -771,7 +771,6 @@ class Router : public echo::Echo {
 
   /** The routing mode. */
   volatile int routingMode;  
-
 }; 
 
 } // namespace routing

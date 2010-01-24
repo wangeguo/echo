@@ -450,40 +450,40 @@ class Route : public echo::routing::TemplateRoute {
     /** Name of the parameter to look for. */
     volatile std::string parameter;
 
-  }
+  };
 
-    /** Internal class holding validation information. */
-    static const class ValidateInfo {
+  /** Internal class holding validation information. */
+  static const class ValidateInfo {
 
-     public:
-      /**
-       * Constructor.
-       * 
-       * @param attribute
-       *            Name of the attribute to look for.
-       * @param required
-       *            Indicates if the attribute presence is required.
-       * @param format
-       *            Format of the attribute value, using Regex pattern syntax.
-       */
-      ValidateInfo(std::string attribute, bool required, std::string format) {
-        this->attribute = attribute;
-        this->required = required;
-        this->format = format;
-      }
+   public:
+    /**
+     * Constructor.
+     * 
+     * @param attribute
+     *            Name of the attribute to look for.
+     * @param required
+     *            Indicates if the attribute presence is required.
+     * @param format
+     *            Format of the attribute value, using Regex pattern syntax.
+     */
+    ValidateInfo(std::string attribute, bool required, std::string format) {
+      this->attribute = attribute;
+      this->required = required;
+      this->format = format;
+    }
     
-     protected:
-      /** Name of the attribute to look for. */
-      volatile std::string attribute;
+   protected:
+    /** Name of the attribute to look for. */
+    volatile std::string attribute;
 
-      /** Format of the attribute value, using Regex pattern syntax. */
-      volatile std::string format;
+    /** Format of the attribute value, using Regex pattern syntax. */
+    volatile std::string format;
 
-      /** Indicates if the attribute presence is required. */
-      volatile bool required;
+    /** Indicates if the attribute presence is required. */
+    volatile bool required;
 
 
-    };
+  };
 
   /** The list of cookies to extract. */
   volatile std::list<ExtractInfo> cookieExtracts;

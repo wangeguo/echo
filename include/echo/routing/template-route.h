@@ -1,311 +1,321 @@
 #ifndef _ECHO_ROUTING_TEMPLATE_ROUTE_H_
 #define _ECHO_ROUTING_TEMPLATE_ROUTE_H_
-/*
-import java.util.logging.Level;
 
-import org.restlet.Request;
-import org.restlet.Response;
-import org.restlet.Restlet;
-import org.restlet.data.Reference;
-import org.restlet.data.Status;
-*/
+#include <string>
+
+#include <echo/request.h>
+#include <echo/response.h>
+#include <echo/echo.h>
+#include <echo/data/reference.h>
+#include <echo/data/status.h>
+
+#include <echo/util/logging/level.h>
+
 
 namespace echo {
 namespace routing {
 
 
 /**
- * Filter scoring the affinity of calls with the attached Restlet. The score is
+ * Filter scoring the affinity of calls with the attached Echo. The score is
  * used by an associated Router in order to determine the most appropriate
- * Restlet for a given call. The routing is based on a reference template.<br>
+ * Echo for a given call. The routing is based on a reference template.<br>
  * <br>
  * Concurrency note: instances of this class or its subclasses can be invoked by
  * several threads at the same time and therefore must be thread-safe. You
  * should be especially careful when storing state in member variables.
  * 
- * @see org.restlet.routing.Template
+ * @see echo::routing::Template
  * @author Jerome Louvel
  */
 class TemplateRoute : public echo::routing::Filter {
-    /**
-     * Indicates whether the query part should be taken into account when
-     * matching a reference with the template.
-     */
-    private volatile boolean matchingQuery;
 
-    /** The parent router. */
-    private volatile Router router;
+ public:
+    
+  /**
+   * Constructor behaving as a simple extractor filter.
+   * 
+   * @param next
+   *            The next Echo.
+   */
+  TemplateRoute(Echo::Echo next) {
+    TemplateRoute(null, (Template) null, next);
+  }
 
-    /** The reference template to match. */
-    private volatile Template template;
+  /**
+   * Constructor. The URIs will be matched agains the template using the
+   * {@link Template#MODE_STARTS_WITH} matching mode. This can be changed by
+   * getting the template and calling {@link Template#setMatchingMode(int)}
+   * with {@link Template#MODE_EQUALS} for exact matching.
+   * 
+   * @param router
+   *            The parent router.
+   * @param uriTemplate
+   *            The URI template.
+   * @param next
+   *            The next Echo.
+   */
+  TemplateRoute(Router router, std::string uriTemplate, Echo::Echo next) {
+    TemplateRoute(router, new Template(uriTemplate, Template.MODE_STARTS_WITH,
+                              Variable.TYPE_URI_SEGMENT, "", true, false), next);
+  }
 
-    /**
-     * Constructor behaving as a simple extractor filter.
-     * 
-     * @param next
-     *            The next Restlet.
-     */
-    public TemplateRoute(Restlet next) {
-        this(null, (Template) null, next);
+  /**
+   * Constructor.
+   * 
+   * @param router
+   *            The parent router.
+   * @param template
+   *            The URI template.
+   * @param next
+   *            The next Echo.
+   */
+  TemplateRoute(Router router, Template template, Echo::Echo next) {
+    Filter(router == null ? null : router.getContext(), next);
+    matchingQuery = (router == null) ? true : router
+                         .getDefaultMatchingQuery();
+    this->router = router;
+    this->template = template;
+  }
+
+
+  /**
+   * Returns the matching mode to use on the template when parsing a formatted
+   * reference.
+   * 
+   * @return The matching mode to use.
+   */
+  int getMatchingMode() {
+    return getTemplate().getMatchingMode();
+  }
+
+  /**
+   * Indicates whether the query part should be taken into account when
+   * matching a reference with the template.
+   * 
+   * @return True if the query part of the reference should be taken into
+   *         account, false otherwise.
+   * @deprecated Use {@link #isMatchingQuery()} instead.
+   */
+  //@Deprecated
+  bool getMatchQuery() {
+    return matchingQuery;
+  }
+
+  /**
+   * Returns the parent router.
+   * 
+   * @return The parent router.
+   */
+  Router getRouter() {
+    return router;
+  }
+
+  /**
+   * Returns the reference template to match.
+   * 
+   * @return The reference template to match.
+   */
+  Template getTemplate() {
+    return template;
+  }
+
+  /**
+   * Indicates whether the query part should be taken into account when
+   * matching a reference with the template.
+   * 
+   * @return True if the query part of the reference should be taken into
+   *         account, false otherwise.
+   */
+  bool isMatchingQuery() {
+    return getMatchQuery();
+  }
+
+  /**
+   * Returns the score for a given call (between 0 and 1.0).
+   * 
+   * @param request
+   *            The request to score.
+   * @param response
+   *            The response to score.
+   * @return The score for a given call (between 0 and 1.0).
+   */
+  float score(echo::Request request, echo::Response response) {
+    float result = 0F;
+
+    if ((getRouter() != null) && (request.getResourceRef() != null)
+        && (getTemplate() != null)) {
+      const std::string remainingPart = request.getResourceRef()
+                                   .getRemainingPart(false, isMatchingQuery());
+      if (remainingPart != null) {
+        const int matchedLength = getTemplate().match(remainingPart);
+
+        if (matchedLength != -1) {
+          const float totalLength = remainingPart.length();
+
+          if (totalLength > 0.0F) {
+            result = getRouter().getRequiredScore()
+                     + (1.0F - getRouter().getRequiredScore())
+                     * (matchedLength / totalLength);
+          } else {
+            result = 1.0F;
+          }
+        }
+      }
+
+      if (getLogger().isLoggable(Level.FINER)) {
+        getLogger().finer(
+            "Call score for the \"" + getTemplate().getPattern()
+            + "\" URI pattern: " + result);
+      }
     }
 
-    /**
-     * Constructor. The URIs will be matched agains the template using the
-     * {@link Template#MODE_STARTS_WITH} matching mode. This can be changed by
-     * getting the template and calling {@link Template#setMatchingMode(int)}
-     * with {@link Template#MODE_EQUALS} for exact matching.
-     * 
-     * @param router
-     *            The parent router.
-     * @param uriTemplate
-     *            The URI template.
-     * @param next
-     *            The next Restlet.
-     */
-    public TemplateRoute(Router router, String uriTemplate, Restlet next) {
-        this(router, new Template(uriTemplate, Template.MODE_STARTS_WITH,
-                Variable.TYPE_URI_SEGMENT, "", true, false), next);
-    }
+    return result;
+  }
 
-    /**
-     * Constructor.
-     * 
-     * @param router
-     *            The parent router.
-     * @param template
-     *            The URI template.
-     * @param next
-     *            The next Restlet.
-     */
-    public TemplateRoute(Router router, Template template, Restlet next) {
-        super(router == null ? null : router.getContext(), next);
-        this.matchingQuery = (router == null) ? true : router
-                .getDefaultMatchingQuery();
-        this.router = router;
-        this.template = template;
-    }
+  /**
+   * Sets the matching mode to use on the template when parsing a formatted
+   * reference.
+   * 
+   * @param matchingMode
+   *            The matching mode to use.
+   */
+  void setMatchingMode(int matchingMode) {
+    getTemplate().setMatchingMode(matchingMode);
+  }
 
-    /**
-     * Allows filtering before its handling by the target Restlet. By default it
-     * parses the template variable, adjust the base reference of the target
-     * resource's reference.
-     * 
-     * @param request
-     *            The request to filter.
-     * @param response
-     *            The response to filter.
-     * @return The continuation status.
-     */
-    @Override
-    protected int beforeHandle(Request request, Response response) {
-        // 1 - Parse the template variables and adjust the base reference
-        if (getTemplate() != null) {
-            final String remainingPart = request.getResourceRef()
-                    .getRemainingPart(false, isMatchingQuery());
-            final int matchedLength = getTemplate().parse(remainingPart,
-                    request);
+  /**
+   * Sets whether the matching should be done on the URI with or without query
+   * string.
+   * 
+   * @param matchingQuery
+   *            True if the matching should be done with the query string,
+   *            false otherwise.
+   */
+  void setMatchingQuery(bool matchingQuery) {
+    setMatchQuery(matchingQuery);
+  }
 
-            if (getLogger().isLoggable(Level.FINER)) {
-                getLogger().finer(
-                        "Attempting to match this pattern: "
-                                + getTemplate().getPattern() + " >> "
-                                + matchedLength);
-            }
+  /**
+   * Sets whether the matching should be done on the URI with or without query
+   * string.
+   * 
+   * @param matchingQuery
+   *            True if the matching should be done with the query string,
+   *            false otherwise.
+   * @deprecated Use {@link #setMatchingQuery(bool)} instead.
+   */
+  //@Deprecated
+  void setMatchQuery(bool matchingQuery) {
+    this->matchingQuery = matchingQuery;
+  }
 
-            if (matchedLength != -1) {
-                // Updates the context
-                final String matchedPart = remainingPart.substring(0,
-                        matchedLength);
-                Reference baseRef = request.getResourceRef().getBaseRef();
+  /**
+   * Sets the parent router.
+   * 
+   * @param router
+   *            The parent router.
+   */
+  void setRouter(Router router) {
+    this->router = router;
+  }
 
-                if (baseRef == null) {
-                    baseRef = new Reference(matchedPart);
-                } else {
-                    baseRef = new Reference(baseRef.toString(false, false)
-                            + matchedPart);
-                }
+  /**
+   * Sets the reference template to match.
+   * 
+   * @param template
+   *            The reference template to match.
+   */
+  void setTemplate(Template template) {
+    this->template = template;
+  }
 
-                request.getResourceRef().setBaseRef(baseRef);
+  //@Override
+  std::string toString() {
+    return (getTemplate() == null) ? super.toString() : getTemplate()
+        .getPattern();
+  }
 
-                if (getLogger().isLoggable(Level.FINE)) {
-                    getLogger().fine(
-                            "New base URI: "
-                                    + request.getResourceRef().getBaseRef());
-                    getLogger().fine(
-                            "New remaining part: "
-                                    + request.getResourceRef()
-                                            .getRemainingPart(false,
-                                                    isMatchingQuery()));
-                }
+ protected:
+  /**
+   * Allows filtering before its handling by the target Echo. By default it
+   * parses the template variable, adjust the base reference of the target
+   * resource's reference.
+   * 
+   * @param request
+   *            The request to filter.
+   * @param response
+   *            The response to filter.
+   * @return The continuation status.
+   */
+  //@Override
+  int beforeHandle(Request request, Response response) {
+    // 1 - Parse the template variables and adjust the base reference
+    if (getTemplate() != null) {
+      const std::string remainingPart = request.getResourceRef()
+                                   .getRemainingPart(false, isMatchingQuery());
+      const int matchedLength = getTemplate().parse(remainingPart,
+                                                    request);
 
-                if (getLogger().isLoggable(Level.FINE)) {
-                    getLogger().fine(
-                            "Delegating the call to the target Restlet");
-                }
-            } else {
-                response.setStatus(Status.CLIENT_ERROR_NOT_FOUND);
-            }
+      if (getLogger().isLoggable(Level.FINER)) {
+        getLogger().finer(
+            "Attempting to match this pattern: "
+            + getTemplate().getPattern() + " >> "
+            + matchedLength);
+      }
+
+      if (matchedLength != -1) {
+        // Updates the context
+        const std::string matchedPart = remainingPart.substring(0,
+                                                           matchedLength);
+        Reference baseRef = request.getResourceRef().getBaseRef();
+
+        if (baseRef == null) {
+          baseRef = new Reference(matchedPart);
+        } else {
+          baseRef = new Reference(baseRef.toString(false, false)
+                                  + matchedPart);
         }
 
-        return CONTINUE;
-    }
+        request.getResourceRef().setBaseRef(baseRef);
 
-    /**
-     * Returns the matching mode to use on the template when parsing a formatted
-     * reference.
-     * 
-     * @return The matching mode to use.
-     */
-    public int getMatchingMode() {
-        return getTemplate().getMatchingMode();
-    }
-
-    /**
-     * Indicates whether the query part should be taken into account when
-     * matching a reference with the template.
-     * 
-     * @return True if the query part of the reference should be taken into
-     *         account, false otherwise.
-     * @deprecated Use {@link #isMatchingQuery()} instead.
-     */
-    @Deprecated
-    public boolean getMatchQuery() {
-        return this.matchingQuery;
-    }
-
-    /**
-     * Returns the parent router.
-     * 
-     * @return The parent router.
-     */
-    public Router getRouter() {
-        return this.router;
-    }
-
-    /**
-     * Returns the reference template to match.
-     * 
-     * @return The reference template to match.
-     */
-    public Template getTemplate() {
-        return this.template;
-    }
-
-    /**
-     * Indicates whether the query part should be taken into account when
-     * matching a reference with the template.
-     * 
-     * @return True if the query part of the reference should be taken into
-     *         account, false otherwise.
-     */
-    public boolean isMatchingQuery() {
-        return getMatchQuery();
-    }
-
-    /**
-     * Returns the score for a given call (between 0 and 1.0).
-     * 
-     * @param request
-     *            The request to score.
-     * @param response
-     *            The response to score.
-     * @return The score for a given call (between 0 and 1.0).
-     */
-    public float score(Request request, Response response) {
-        float result = 0F;
-
-        if ((getRouter() != null) && (request.getResourceRef() != null)
-                && (getTemplate() != null)) {
-            final String remainingPart = request.getResourceRef()
-                    .getRemainingPart(false, isMatchingQuery());
-            if (remainingPart != null) {
-                final int matchedLength = getTemplate().match(remainingPart);
-
-                if (matchedLength != -1) {
-                    final float totalLength = remainingPart.length();
-
-                    if (totalLength > 0.0F) {
-                        result = getRouter().getRequiredScore()
-                                + (1.0F - getRouter().getRequiredScore())
-                                * (matchedLength / totalLength);
-                    } else {
-                        result = 1.0F;
-                    }
-                }
-            }
-
-            if (getLogger().isLoggable(Level.FINER)) {
-                getLogger().finer(
-                        "Call score for the \"" + getTemplate().getPattern()
-                                + "\" URI pattern: " + result);
-            }
+        if (getLogger().isLoggable(Level.FINE)) {
+          getLogger().fine(
+              "New base URI: "
+              + request.getResourceRef().getBaseRef());
+          getLogger().fine(
+              "New remaining part: "
+              + request.getResourceRef()
+              .getRemainingPart(false,
+                                isMatchingQuery()));
         }
 
-        return result;
+        if (getLogger().isLoggable(Level.FINE)) {
+          getLogger().fine(
+              "Delegating the call to the target Echo");
+        }
+      } else {
+        response.setStatus(Status.CLIENT_ERROR_NOT_FOUND);
+      }
     }
 
-    /**
-     * Sets the matching mode to use on the template when parsing a formatted
-     * reference.
-     * 
-     * @param matchingMode
-     *            The matching mode to use.
-     */
-    public void setMatchingMode(int matchingMode) {
-        getTemplate().setMatchingMode(matchingMode);
-    }
+    return CONTINUE;
+  }
+    
+ private:
 
-    /**
-     * Sets whether the matching should be done on the URI with or without query
-     * string.
-     * 
-     * @param matchingQuery
-     *            True if the matching should be done with the query string,
-     *            false otherwise.
-     */
-    public void setMatchingQuery(boolean matchingQuery) {
-        setMatchQuery(matchingQuery);
-    }
+  /**
+   * Indicates whether the query part should be taken into account when
+   * matching a reference with the template.
+   */
+  volatile bool matchingQuery;
 
-    /**
-     * Sets whether the matching should be done on the URI with or without query
-     * string.
-     * 
-     * @param matchingQuery
-     *            True if the matching should be done with the query string,
-     *            false otherwise.
-     * @deprecated Use {@link #setMatchingQuery(boolean)} instead.
-     */
-    @Deprecated
-    public void setMatchQuery(boolean matchingQuery) {
-        this.matchingQuery = matchingQuery;
-    }
+  /** The parent router. */
+  volatile Router router;
 
-    /**
-     * Sets the parent router.
-     * 
-     * @param router
-     *            The parent router.
-     */
-    public void setRouter(Router router) {
-        this.router = router;
-    }
+  /** The reference template to match. */
+  volatile Template template;
 
-    /**
-     * Sets the reference template to match.
-     * 
-     * @param template
-     *            The reference template to match.
-     */
-    public void setTemplate(Template template) {
-        this.template = template;
-    }
-
-    @Override
-    public String toString() {
-        return (getTemplate() == null) ? super.toString() : getTemplate()
-                .getPattern();
-    }
 };
 
 } // namespace routing
