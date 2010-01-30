@@ -57,7 +57,7 @@ class Filter : public echo::Echo {
    *            The next Echo.
    */
   Filter(Context context, echo::Echo next) {
-    super(context);
+    echo::Echo(context);
     this->next = next;
   }
 
@@ -82,32 +82,7 @@ class Filter : public echo::Echo {
    *            The response to update.
    */
   //@Override
-  const void handle(echo::Request request, echo::Response response) {
-    super.handle(request, response);
-
-    switch (beforeHandle(request, response)) {
-      case CONTINUE:
-        switch (doHandle(request, response)) {
-          case CONTINUE:
-            afterHandle(request, response);
-            break;
-
-          default:
-            // Stop the processing
-            break;
-        }
-        break;
-
-      case SKIP:
-        afterHandle(request, response);
-        break;
-
-      default:
-        // Stop the processing
-        break;
-    }
-
-  }
+  const void handle(echo::Request request, echo::Response response); 
 
   /**
    * Indicates if there is a next Echo.
@@ -127,9 +102,7 @@ class Filter : public echo::Echo {
    * @param targetClass
    *            The target resource class to attach.
    */
-  void setNext(Class<?> targetClass) {
-    setNext(new Finder(getContext(), targetClass));
-  }
+  void setNext(Class<?> targetClass);
 
   /**
    * Sets the next Echo.
@@ -140,41 +113,21 @@ class Filter : public echo::Echo {
    * @param next
    *            The next Echo.
    */
-  void setNext(echo::Echo next) {
-    if ((next != null) && (next.getContext() == null)) {
-      next.setContext(getContext());
-    }
-
-    this->next = next;
-  }
+  void setNext(echo::Echo next);
 
   /**
    * Starts the filter and the next Echo if attached.
    */
   //@Override
-  synchronized void start() throws Exception {
-    if (isStopped()) {
-      super.start();
-
-      if (getNext() != null) {
-        getNext().start();
-      }
-    }
-  }
+  //synchronized void start() throws Exception {
+  void start() throw (std::runtime_error);
 
   /**
    * Stops the filter and the next Echo if attached.
    */
   //@Override
-  synchronized void stop() throws Exception {
-    if (isStarted()) {
-      if (getNext() != null) {
-        getNext().stop();
-      }
-
-      super.stop();
-    }
-  }
+  //synchronized void stop() throws Exception {
+  void stop() throw (std::runtime_error);
 
 
  protected:  
@@ -218,30 +171,7 @@ class Filter : public echo::Echo {
    * @return The continuation status. Either {@link #CONTINUE} or
    *         {@link #STOP}.
    */
-  int doHandle(echo::Request request, echo::Response response) {
-    const int result = CONTINUE;
-
-    if (getNext() != null) {
-      getNext().handle(request, response);
-
-      // Re-associate the response to the current thread
-      echo::Response.setCurrent(response);
-
-      // Associate the context to the current thread
-      if (getContext() != null) {
-        Context.setCurrent(getContext());
-      }
-    } else {
-      response.setStatus(Status.SERVER_ERROR_INTERNAL);
-      getLogger()
-          .warning(
-              "The filter "
-              + getName()
-              + " was executed without a next Echo attached to it.");
-    }
-
-    return result;
-  }
+  int doHandle(echo::Request request, echo::Response response);
   
 
  public:
@@ -252,7 +182,7 @@ class Filter : public echo::Echo {
    * returned from the {@link #doHandle(echo::Request, echo::Response)} method, the filter
    * then invokes the {@link #afterHandle(echo::Request, echo::Response)} method.
    */
-  static const int CONTINUE = 0;
+  static const int CONTINUE;
 
   /**
    * Indicates that after the {@link #beforeHandle(echo::Request, echo::Response)} method,
@@ -260,13 +190,13 @@ class Filter : public echo::Echo {
    * {@link #doHandle(echo::Request, echo::Response)} method to continue with the
    * {@link #afterHandle(echo::Request, echo::Response)} method.
    */
-  static const int SKIP = 1;
+  static const int SKIP;
 
   /**
    * Indicates that the request processing should stop and return the current
    * response from the filter.
    */
-  static const int STOP = 2;
+  static const int STOP;
 
  private:
   /** The next Echo. */
