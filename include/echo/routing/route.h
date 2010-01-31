@@ -69,10 +69,7 @@ class Route : public echo::routing::TemplateRoute {
    * @param next
    *            The next Echo.
    */
-  Route(Router router, std::string uriTemplate, Restlet next) {
-    Route(router, new Template(uriTemplate, Template.MODE_STARTS_WITH,
-                               Variable.TYPE_URI_SEGMENT, "", true, false), next);
-  }
+  Route(Router router, std::string uriTemplate, echo::Echo next);
 
   /**
    * Constructor.
@@ -84,8 +81,8 @@ class Route : public echo::routing::TemplateRoute {
    * @param next
    *            The next Echo.
    */
-  Route(Router router, Template template, Restlet next) {
-    super(router, template, next);
+  Route(Router router, Template template, echo::Echo next) {
+    TemplateRoute(router, template, next);
   }
 
 
@@ -103,10 +100,7 @@ class Route : public echo::routing::TemplateRoute {
    * @return The current Filter.
    */
   Route extractCookie(std::string attribute, std::string cookieName,
-                      bool first) {
-    getCookieExtracts().add(new ExtractInfo(attribute, cookieName, first));
-    return this;
-  }
+                      bool first);
 
   /**
    * Extracts an attribute from the request entity form.
@@ -120,10 +114,7 @@ class Route : public echo::routing::TemplateRoute {
    *            a List instance might be set in the attribute value.
    * @return The current Filter.
    */
-  Route extractEntity(std::string attribute, std::string parameter, bool first) {
-    getEntityExtracts().add(new ExtractInfo(attribute, parameter, first));
-    return this;
-  }
+  Route extractEntity(std::string attribute, std::string parameter, bool first);
 
   /**
    * Extracts an attribute from the query string of the resource reference.
@@ -137,10 +128,7 @@ class Route : public echo::routing::TemplateRoute {
    *            a List instance might be set in the attribute value.
    * @return The current Filter.
    */
-  Route extractQuery(std::string attribute, std::string parameter, bool first) {
-    getQueryExtracts().add(new ExtractInfo(attribute, parameter, first));
-    return this;
-  }
+  Route extractQuery(std::string attribute, std::string parameter, bool first);
 
   
   /**
@@ -155,9 +143,7 @@ class Route : public echo::routing::TemplateRoute {
    * @param format
    *            Format of the attribute value, using Regex pattern syntax.
    */
-  void validate(std::string attribute, bool required, std::string format) {
-    getValidations().add(new ValidateInfo(attribute, required, format));
-  }
+  void validate(std::string attribute, bool required, std::string format);
 
  protected:
   /**
@@ -174,65 +160,7 @@ class Route : public echo::routing::TemplateRoute {
    * @return The continuation status.
    */
   //@Override
-  int beforeHandle(Request request, Response response) {
-    // 1 - Parse the template variables and adjust the base reference
-    if (getTemplate() != null) {
-      const std::string remainingPart = request.getResourceRef()
-                                        .getRemainingPart(false, isMatchingQuery());
-      const int matchedLength = getTemplate().parse(remainingPart,
-                                                    request);
-      
-      if (getLogger().isLoggable(Level.FINER)) {
-        getLogger().finer(
-            "Attempting to match this pattern: "
-            + getTemplate().getPattern() + " >> "
-            + matchedLength);
-      }
-
-      if (matchedLength != -1) {
-        // Updates the context
-        const std::string matchedPart = remainingPart.substring(0,
-                                                                matchedLength);
-        Reference baseRef = request.getResourceRef().getBaseRef();
-
-        if (baseRef == null) {
-          baseRef = new Reference(matchedPart);
-        } else {
-          baseRef = new Reference(baseRef.toString(false, false)
-                                  + matchedPart);
-        }
-
-        request.getResourceRef().setBaseRef(baseRef);
-
-        if (getLogger().isLoggable(Level.FINE)) {
-          getLogger().fine(
-              "New base URI: "
-              + request.getResourceRef().getBaseRef());
-          getLogger().fine(
-              "New remaining part: "
-              + request.getResourceRef()
-              .getRemainingPart(false,
-                                isMatchingQuery()));
-        }
-
-        if (getLogger().isLoggable(Level.FINE)) {
-          getLogger().fine(
-              "Delegating the call to the target Echo");
-        }
-      } else {
-        response.setStatus(Status.CLIENT_ERROR_NOT_FOUND);
-      }
-    }
-
-    // 2 - Extract the attributes from form parameters (query, cookies,
-    // entity).
-    extractAttributes(request, response);
-
-    // 3 - Validate the attributes extracted (or others)
-    validateAttributes(request, response);
-
-    return CONTINUE;
-  }
+  int beforeHandle(echo::Request request, echo::Response response);
   
  private:
   /**
@@ -243,58 +171,7 @@ class Route : public echo::routing::TemplateRoute {
    * @param response
    *            The response to process.
    */
-  void extractAttributes(Request request, Response response) {
-    // Extract the query parameters
-    if (!getQueryExtracts().isEmpty()) {
-      const Form form = request.getResourceRef().getQueryAsForm();
-
-      if (form != null) {
-        for (const ExtractInfo ei : getQueryExtracts()) {
-          if (ei.first) {
-            request.getAttributes().put(ei.attribute,
-                                        form.getFirstValue(ei.parameter));
-          } else {
-            request.getAttributes().put(ei.attribute,
-                                        form.subList(ei.parameter));
-          }
-        }
-      }
-    }
-
-    // Extract the request entity parameters
-    if (!getEntityExtracts().isEmpty()) {
-      const Form form = request.getEntityAsForm();
-
-      if (form != null) {
-        for (const ExtractInfo ei : getEntityExtracts()) {
-          if (ei.first) {
-            request.getAttributes().put(ei.attribute,
-                                        form.getFirstValue(ei.parameter));
-          } else {
-            request.getAttributes().put(ei.attribute,
-                                        form.subList(ei.parameter));
-          }
-        }
-      }
-    }
-
-    // Extract the cookie parameters
-    if (!getCookieExtracts().isEmpty()) {
-      const Series<Cookie> cookies = request.getCookies();
-
-      if (cookies != null) {
-        for (const ExtractInfo ei : getCookieExtracts()) {
-          if (ei.first) {
-            request.getAttributes().put(ei.attribute,
-                                        cookies.getFirstValue(ei.parameter));
-          } else {
-            request.getAttributes().put(ei.attribute,
-                                        cookies.subList(ei.parameter));
-          }
-        }
-      }
-    }
-  }
+  void extractAttributes(echo::Request request, echo::Response response);
 
 
   /**
@@ -302,76 +179,28 @@ class Route : public echo::routing::TemplateRoute {
    * 
    * @return The list of query extracts.
    */
-  std::list<ExtractInfo> getCookieExtracts() {
-    // Lazy initialization with double-check.
-    std::list<ExtractInfo> ce = cookieExtracts;
-    if (ce == null) {
-      synchronized (this) {
-        ce = cookieExtracts;
-        if (ce == null) {
-          cookieExtracts = ce = new CopyOnWriteArrayList<ExtractInfo>();
-        }
-      }
-    }
-    return ce;
-  }
+  std::list<ExtractInfo> getCookieExtracts();
 
   /**
    * Returns the list of query extracts.
    * 
    * @return The list of query extracts.
    */
-  std::list<ExtractInfo> getEntityExtracts() {
-    // Lazy initialization with double-check.
-    std::list<ExtractInfo> ee = entityExtracts;
-    if (ee == null) {
-      synchronized (this) {
-        ee = entityExtracts;
-        if (ee == null) {
-          entityExtracts = ee = new CopyOnWriteArrayList<ExtractInfo>();
-        }
-      }
-    }
-    return ee;
-  }
+  std::list<ExtractInfo> getEntityExtracts();
 
   /**
    * Returns the list of query extracts.
    * 
    * @return The list of query extracts.
    */
-  std::list<ExtractInfo> getQueryExtracts() {
-    // Lazy initialization with double-check.
-    std::list<ExtractInfo> qe = queryExtracts;
-    if (qe == null) {
-      synchronized (this) {
-        qe = queryExtracts;
-        if (qe == null) {
-          queryExtracts = qe = new CopyOnWriteArrayList<ExtractInfo>();
-        }
-      }
-    }
-    return qe;
-  }
+  std::list<ExtractInfo> getQueryExtracts();
 
   /**
    * Returns the list of attribute validations.
    * 
    * @return The list of attribute validations.
    */
-  std::list<ValidateInfo> getValidations() {
-    // Lazy initialization with double-check.
-    std::list<ValidateInfo> v = validations;
-    if (v == null) {
-      synchronized (this) {
-        v = validations;
-        if (v == null) {
-          validations = v = new CopyOnWriteArrayList<ValidateInfo>();
-        }
-      }
-    }
-    return v;
-  }
+  std::list<ValidateInfo> getValidations();
 
   /**
    * Validates the attributes from the request.
@@ -381,44 +210,7 @@ class Route : public echo::routing::TemplateRoute {
    * @param response
    *            The response to process.
    */
-  void validateAttributes(Request request, Response response) {
-    if (validations != null) {
-      for (const ValidateInfo validate : getValidations()) {
-        if (validate.required
-            && !request.getAttributes().containsKey(
-                validate.attribute)) {
-          response
-              .setStatus(
-                  Status.CLIENT_ERROR_BAD_REQUEST,
-                  "Unable to find the \""
-                  + validate.attribute
-                  + "\" attribute in the request. Please check your request.");
-        } else if (validate.format != null) {
-          const Object value = request.getAttributes().get(
-              validate.attribute);
-          if (value == null) {
-            response
-                .setStatus(
-                    Status.CLIENT_ERROR_BAD_REQUEST,
-                    "Unable to validate the \""
-                    + validate.attribute
-                    + "\" attribute with a null value. Please check your request.");
-          } else {
-            if (!Pattern.matches(validate.format, value.toString())) {
-              response
-                  .setStatus(
-                      Status.CLIENT_ERROR_BAD_REQUEST,
-                      "Unable to validate the value of the \""
-                      + validate.attribute
-                      + "\" attribute. The expected format is: "
-                      + validate.format
-                      + " (Java Regex). Please check your request.");
-            }
-          }
-        }
-      }
-    }
-  }
+  void validateAttributes(echo::Request request, echo::Response response);
 
     
   /** Internal class holding extraction information. */
