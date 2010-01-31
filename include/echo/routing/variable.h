@@ -73,14 +73,7 @@ class Variable {
    *            Indicates if the formatted value must be encoded.
    */
   Variable(int type, std::string defaultValue, bool required,
-           bool fixed, bool decodingOnParse, bool encodingOnFormat) {
-    this->type = type;
-    this->defaultValue = defaultValue;
-    this->required = required;
-    this->fixed = fixed;
-    this->decodingOnParse = decodingOnParse;
-    this->encodingOnFormat = encodingOnFormat;
-  }
+           bool fixed, bool decodingOnParse, bool encodingOnFormat);
 
   /**
    * According to the type of the variable, encodes the value given in
@@ -90,24 +83,7 @@ class Variable {
    *            The value to encode.
    * @return The encoded value, according to the variable type.
    */
-  std::string encode(std::string value) {
-    switch (type) {
-      case Variable.TYPE_URI_ALL:
-        return Reference.encode(value);
-      case Variable.TYPE_URI_UNRESERVED:
-        return Reference.encode(value);
-      case Variable.TYPE_URI_FRAGMENT:
-        return Reference.encode(value);
-      case Variable.TYPE_URI_PATH:
-        return Reference.encode(value);
-      case Variable.TYPE_URI_QUERY:
-        return Reference.encode(value);
-      case Variable.TYPE_URI_SEGMENT:
-        return Reference.encode(value);
-      default:
-        return value;
-    }
-  }
+  std::string encode(std::string value);
 
   /**
    * Returns the default value to use if the key couldn't be found in the
@@ -196,7 +172,7 @@ class Variable {
    *            True if the parsed value must be decoded, false otherwise.
    * @deprecated Use {@link #setDecodingOnParse(bool)} instead.
    */
-  @Deprecated
+  //@Deprecated
   void setDecodedOnParse(bool decodingOnParse) {
     this->decodingOnParse = decodingOnParse;
   }
@@ -229,7 +205,7 @@ class Variable {
    *            True if the formatted value must be encoded, false otherwise.
    * @deprecated Use {@link #setEncodingOnFormat(bool)} instead.
    */
-  @Deprecated
+  //@Deprecated
   void setEncodedOnFormat(bool encodingOnFormat) {
     this->encodingOnFormat = encodingOnFormat;
   }
@@ -276,52 +252,52 @@ class Variable {
 
  public:
   /** Matches all characters. */
-  static const int TYPE_ALL = 1;
+  static const int TYPE_ALL;
 
   /** Matches all alphabetical characters. */
-  static const int TYPE_ALPHA = 2;
+  static const int TYPE_ALPHA;
 
   /** Matches all alphabetical and digital characters. */
-  static const int TYPE_ALPHA_DIGIT = 3;
+  static const int TYPE_ALPHA_DIGIT;
 
   /** Matches any TEXT excluding "(" and ")". */
-  static const int TYPE_COMMENT = 4;
+  static const int TYPE_COMMENT;
 
   /** Matches any TEXT inside a comment excluding ";". */
-  static const int TYPE_COMMENT_ATTRIBUTE = 5;
+  static const int TYPE_COMMENT_ATTRIBUTE;
 
   /** Matches all digital characters. */
-  static const int TYPE_DIGIT = 6;
+  static const int TYPE_DIGIT;
 
   /** Matches any CHAR except CTLs or separators. */
-  static const int TYPE_TOKEN = 7;
+  static const int TYPE_TOKEN;
 
   /** Matches all URI characters. */
-  static const int TYPE_URI_ALL = 8;
+  static const int TYPE_URI_ALL;
 
   /** Matches URI fragment characters. */
-  static const int TYPE_URI_FRAGMENT = 9;
+  static const int TYPE_URI_FRAGMENT;
 
   /** Matches URI path characters (not the query or the fragment parts). */
-  static const int TYPE_URI_PATH = 10;
+  static const int TYPE_URI_PATH;
 
   /** Matches URI query characters. */
-  static const int TYPE_URI_QUERY = 11;
+  static const int TYPE_URI_QUERY;
 
   /** Matches URI query parameter characters (name or value). */
-  static const int TYPE_URI_QUERY_PARAM = 12;
+  static const int TYPE_URI_QUERY_PARAM;
 
   /** Matches URI scheme characters. */
-  static const int TYPE_URI_SCHEME = 13;
+  static const int TYPE_URI_SCHEME;
 
   /** Matches URI segment characters. */
-  static const int TYPE_URI_SEGMENT = 14;
+  static const int TYPE_URI_SEGMENT;
 
   /** Matches unreserved URI characters. */
-  static const int TYPE_URI_UNRESERVED = 15;
+  static const int TYPE_URI_UNRESERVED;
 
   /** Matches all alphabetical and digital characters plus the underscore. */
-  static const int TYPE_WORD = 16;
+  static const int TYPE_WORD;
 
  private:
   /** Indicates if the parsed value must be decoded. */
