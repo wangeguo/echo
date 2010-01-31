@@ -61,9 +61,7 @@ class VirtualHost : public echo::routing::Router {
    * 
    * @return The current context.
    */
-  static Integer getCurrent() {
-    return CURRENT.get();
-  }
+  static Integer getCurrent();
 
   /**
    * Returns the IP address of a given domain name.
@@ -72,48 +70,21 @@ class VirtualHost : public echo::routing::Router {
    *            The domain name.
    * @return The IP address.
    */
-  static std::string getIpAddress(std::string domain) {
-    std::string result = null;
-
-    try {
-      result = InetAddress.getByName(domain).getHostAddress();
-    } catch (UnknownHostException e) {
-    }
-
-    return result;
-  }
+  static std::string getIpAddress(std::string domain);
 
   /**
    * Returns the local host IP address.
    * 
    * @return The local host IP address.
    */
-  static std::string getLocalHostAddress() {
-    std::string result = null;
-
-    try {
-      result = InetAddress.getLocalHost().getHostAddress();
-    } catch (UnknownHostException e) {
-    }
-
-    return result;
-  }
+  static std::string getLocalHostAddress();
 
   /**
    * Returns the local host name.
    * 
    * @return The local host name.
    */
-  static std::string getLocalHostName() {
-    std::string result = null;
-
-    try {
-      result = InetAddress.getLocalHost().getHostName();
-    } catch (UnknownHostException e) {
-    }
-
-    return result;
-  }
+  static std::string getLocalHostName();
 
   /**
    * Sets the virtual host code associated with the current thread.
@@ -121,9 +92,7 @@ class VirtualHost : public echo::routing::Router {
    * @param code
    *            The thread's virtual host code.
    */
-  static void setCurrent(Integer code) {
-    CURRENT.set(code);
-  }
+  static void setCurrent(Integer code);
 
   /**
    * Constructor. Note that usage of this constructor is not recommended as
@@ -170,27 +139,7 @@ class VirtualHost : public echo::routing::Router {
   VirtualHost(echo::Context parentContext, std::string hostDomain,
               std::string hostPort, std::string hostScheme, std::string resourceDomain,
               std::string resourcePort, std::string resourceScheme, std::string serverAddress,
-              std::string serverPort) {
-    super((parentContext == null) ? null : parentContext
-          .createChildContext());
-        
-    // Override Router's default modes 
-    setDefaultMatchingMode(Template.MODE_STARTS_WITH);
-    setRoutingMode(MODE_BEST_MATCH);
-
-    this->parentContext = parentContext;
-
-    this->hostDomain = hostDomain;
-    this->hostPort = hostPort;
-    this->hostScheme = hostScheme;
-
-    this->resourceDomain = resourceDomain;
-    this->resourcePort = resourcePort;
-    this->resourceScheme = resourceScheme;
-
-    this->serverAddress = serverAddress;
-    this->serverPort = serverPort;
-  }
+              std::string serverPort);
 
   /**
    * Attaches a target Echo to this router with an empty URI pattern. A new
@@ -206,13 +155,7 @@ class VirtualHost : public echo::routing::Router {
    */
   //@Override
   //@SuppressWarnings("deprecation")
-  Route attach(Echo::Echo target) {
-    if ((target.getContext() == null) && (parentContext != null)) {
-      target.setContext(parentContext.createChildContext());
-    }
-
-    return super.attach(target);
-  }
+  Route attach(Echo::Echo target);
 
   /**
    * Attaches a target Echo to this router based on a given URI pattern. A
@@ -232,13 +175,7 @@ class VirtualHost : public echo::routing::Router {
    */
   //@Override
   //@SuppressWarnings("deprecation")
-  Route attach(std::string uriPattern, Echo::Echo target) {
-    if ((target.getContext() == null) && (parentContext != null)) {
-      target.setContext(parentContext.createChildContext());
-    }
-
-    return super.attach(uriPattern, target);
-  }
+  Route attach(std::string uriPattern, Echo::Echo target);
 
   /**
    * Attaches a Echo to this router as the default target to invoke when no
@@ -255,14 +192,7 @@ class VirtualHost : public echo::routing::Router {
    */
   //@Override
   //@SuppressWarnings("deprecation")
-  Route attachDefault(Echo::Echo defaultTarget) {
-    if ((defaultTarget.getContext() == null)
-        && (parentContext != null)) {
-      defaultTarget.setContext(parentContext.createChildContext());
-    }
-
-    return super.attachDefault(defaultTarget);
-  }
+  Route attachDefault(Echo::Echo defaultTarget);
 
   /**
    * Creates a new finder instance based on the "targetClass" property.
@@ -276,12 +206,7 @@ class VirtualHost : public echo::routing::Router {
    * @return The new finder instance.
    */
   //@Override
-  Finder createFinder(Class<?> targetClass) {
-    Finder result = super.createFinder(targetClass);
-    result.setContext(getContext().createChildContext());
-    return result;
-  }
-
+  Finder createFinder(Class<?> targetClass);
 
   /**
    * Returns the hostRef host domain to match. Uses patterns in
@@ -463,25 +388,12 @@ class VirtualHost : public echo::routing::Router {
  protected:
   //@Override
   //@SuppressWarnings("deprecation")
-  Route createRoute(std::string uriPattern, Echo::Echo target) {
-    return new Route(this, uriPattern, target) {
-      @Override
-      protected int beforeHandle(echo::Request request, echo::Response response) {
-        const int result = super.beforeHandle(request, response);
-
-        // Set the request's root reference
-        request.setRootRef(request.getResourceRef().getBaseRef());
-
-        // Save the hash code of the current host
-        setCurrent(VirtualHost.this->hashCode());
-
-        return result;
-      }
-    };
-  }
+  Route createRoute(std::string uriPattern, Echo::Echo target);
 
  private:
-  static const ThreadLocal<Integer> CURRENT = new ThreadLocal<Integer>();
+
+  static const ThreadLocal<Integer> CURRENT;
+
   /** The hostRef host domain pattern to match. */
   volatile std::string hostDomain;
 
