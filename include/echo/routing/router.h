@@ -67,18 +67,7 @@ class Router : public echo::Echo {
    * @param context
    *            The context.
    */
-  Router(Context context) {
-    Echo(context);
-    routes = new RouteList();
-    defaultMatchingMode = Template.MODE_EQUALS;
-    defaultMatchingQuery = false;
-    defaultRoute = null;
-    finderClass = Finder.class;
-    routingMode = MODE_FIRST_MATCH;
-    requiredScore = 0.5F;
-    maxAttempts = 1;
-    retryDelay = 500L;
-  }
+  Router(echo::Context context);
 
   /**
    * Attaches a target Echo to this router with an empty URI pattern. A new
@@ -106,9 +95,7 @@ class Router : public echo::Echo {
    * @return The created route.
    */
   //@SuppressWarnings("deprecation")
-  Route attach(std::string pathTemplate, Class<?> targetClass) {
-    return attach(pathTemplate, createFinder(targetClass));
-  }
+  Route attach(std::string pathTemplate, Class<?> targetClass);
 
   /**
    * Attaches a target Echo to this router based on a given URI pattern. A
@@ -123,11 +110,7 @@ class Router : public echo::Echo {
    * @return The created route.
    */
   //@SuppressWarnings("deprecation")
-  Route attach(std::string pathTemplate, echo::Echo target) {
-    const Route result = createRoute(pathTemplate, target);
-    getRoutes().add(result);
-    return result;
-  }
+  Route attach(std::string pathTemplate, echo::Echo target);
 
   /**
    * Attaches a Resource class to this router as the default target to invoke
@@ -139,9 +122,7 @@ class Router : public echo::Echo {
    * @return The created route.
    */
   //@SuppressWarnings("deprecation")
-  Route attachDefault(Class<?> defaultTargetClass) {
-    return attachDefault(createFinder(defaultTargetClass));
-  }
+  Route attachDefault(Class<?> defaultTargetClass);
 
   /**
    * Attaches a Echo to this router as the default target to invoke when no
@@ -153,12 +134,7 @@ class Router : public echo::Echo {
    * @return The created route.
    */
   //@SuppressWarnings("deprecation")
-  Route attachDefault(echo::Echo defaultTarget) {
-    Route result = createRoute("", defaultTarget);
-    result.setMatchingMode(Template.MODE_STARTS_WITH);
-    setDefaultRoute(result);
-    return result;
-  }
+  Route attachDefault(echo::Echo defaultTarget);
 
   /**
    * Creates a new finder instance based on the "targetClass" property.
@@ -167,10 +143,7 @@ class Router : public echo::Echo {
    *            The target Resource class to attach.
    * @return The new finder instance.
    */
-  Finder createFinder(Class<?> targetClass) {
-    return Finder.createFinder(targetClass, getFinderClass(), getContext(),
-                               getLogger());
-  }
+  echo::resource::Finder createFinder(Class<?> targetClass);
 
 
   /**
@@ -181,13 +154,7 @@ class Router : public echo::Echo {
    * @param target
    *            The target Echo to detach.
    */
-  void detach(echo::Echo target) {
-    getRoutes().removeAll(target);
-    if ((getDefaultRoute() != null)
-        && (getDefaultRoute().getNext() == target)) {
-      setDefaultRoute(null);
-    }
-  }
+  void detach(echo::Echo target);
 
 
   /**
@@ -269,69 +236,7 @@ class Router : public echo::Echo {
    * @return The next Echo if available or null.
    */
   //@SuppressWarnings("deprecation")
-  echo::Echo getNext(echo::Request request, echo::Response response) {
-    Route result = null;
-
-    for (int i = 0; (result == null) && (i < getMaxAttempts()); i++) {
-      if (i > 0) {
-        // Before attempting another time, let's
-        // sleep during the "retryDelay" set.
-        try {
-          Thread.sleep(getRetryDelay());
-        } catch (InterruptedException e) {
-        }
-      }
-
-      if (routes != null) {
-        // Select the routing mode
-        switch (getRoutingMode()) {
-          case MODE_BEST_MATCH:
-            result = getRoutes().getBest(request, response,
-                                         getRequiredScore());
-            break;
-
-          case MODE_FIRST_MATCH:
-            result = getRoutes().getFirst(request, response,
-                                          getRequiredScore());
-            break;
-
-          case MODE_LAST_MATCH:
-            result = getRoutes().getLast(request, response,
-                                         getRequiredScore());
-            break;
-
-          case MODE_NEXT_MATCH:
-            result = getRoutes().getNext(request, response,
-                                         getRequiredScore());
-            break;
-
-          case MODE_RANDOM_MATCH:
-            result = getRoutes().getRandom(request, response,
-                                           getRequiredScore());
-            break;
-
-          case MODE_CUSTOM:
-            result = getCustom(request, response);
-            break;
-        }
-      }
-    }
-
-    if (result == null) {
-      // If nothing matched in the routes list, check the default
-      // route
-      if ((getDefaultRoute() != null)
-          && (getDefaultRoute().score(request, response) >= getRequiredScore())) {
-        result = getDefaultRoute();
-      } else {
-        // No route could be found
-        response.setStatus(Status.CLIENT_ERROR_NOT_FOUND);
-      }
-    }
-
-    logRoute(result);
-    return result;
-  }
+  echo::Echo getNext(echo::Request request, echo::Response response);
 
   /**
    * Returns the minimum score required to have a match. By default, it
@@ -382,16 +287,7 @@ class Router : public echo::Echo {
    *            The response to update.
    */
   //@Override
-  void handle(echo::Request request, echo::Response response) {
-    super.handle(request, response);
-
-    echo::Echo next = getNext(request, response);
-    if (next != null) {
-      doHandle(next, request, response);
-    } else {
-      response.setStatus(Status.CLIENT_ERROR_NOT_FOUND);
-    }
-  }
+  void handle(echo::Request request, echo::Response response);
 
 
   /**
@@ -415,9 +311,7 @@ class Router : public echo::Echo {
    *            URIs with or without taking into account query string.
    *            
    */
-  void setDefaultMatchingQuery(bool defaultMatchingQuery) {
-    setDefaultMatchQuery(defaultMatchingQuery);
-  }
+  void setDefaultMatchingQuery(bool defaultMatchingQuery);
 
   /**
    * Sets the default setting for whether the routing should be done on URIs
@@ -515,38 +409,14 @@ class Router : public echo::Echo {
    */
   //@SuppressWarnings("deprecation")
   //@Override
-  synchronized void start() throws Exception {
-    if (isStopped()) {
-      super.start();
-
-      for (Route route : getRoutes()) {
-        route.start();
-      }
-
-      if (getDefaultRoute() != null) {
-        getDefaultRoute().start();
-      }
-    }
-  }
+  void start() throw (std::runtime_error);
 
   /**
    * Stops the filter and the attached routes.
    */
   //@SuppressWarnings("deprecation")
   //@Override
-  synchronized void stop() throws Exception {
-    if (isStarted()) {
-      if (getDefaultRoute() != null) {
-        getDefaultRoute().stop();
-      }
-
-      for (Route route : getRoutes()) {
-        route.stop();
-      }
-
-      super.stop();
-    }
-  }
+  void stop() throw (std::runtime_error);
 
   
  protected:
@@ -566,19 +436,7 @@ class Router : public echo::Echo {
    * @return The created route.
    */
   //@SuppressWarnings("deprecation")
-  Route createRoute(std::string uriPattern, echo::Echo target) {
-    Route result = new Route(this, uriPattern, target);
-
-    if (target instanceof Directory) {
-      result.getTemplate().setMatchingMode(Template.MODE_STARTS_WITH);
-    } else {
-      result.getTemplate().setMatchingMode(getDefaultMatchingMode());
-    }
-
-    result.setMatchingQuery(getDefaultMatchingQuery());
-
-    return result;
-  }
+  Route createRoute(std::string uriPattern, echo::Echo target);
 
   /**
    * Effectively handles the call using the selected next {@link Echo},
@@ -592,9 +450,7 @@ class Router : public echo::Echo {
    * @param response
    *            The response.
    */
-  void doHandle(echo::Echo next, echo::Request request, echo::Response response) {
-    next.handle(request, response);
-  }
+  void doHandle(echo::Echo next, echo::Request request, echo::Response response);
 
   /**
    * Returns the matched route according to a custom algorithm. To use in
@@ -639,7 +495,7 @@ class Router : public echo::Echo {
    * @deprecated Use {@link #MODE_BEST_MATCH} instead.
    */
   //@Deprecated
-  static const int BEST = 1;
+  static const int BEST;
 
   /**
    * Each call will be routed according to a custom mode.
@@ -647,7 +503,7 @@ class Router : public echo::Echo {
    * @deprecated Use {@link #MODE_CUSTOM} instead.
    */
   //@Deprecated
-  static const int CUSTOM = 6;
+  static const int CUSTOM;
 
   /**
    * Each call is routed to the first route if the required score is reached.
@@ -657,7 +513,7 @@ class Router : public echo::Echo {
    * @deprecated Use {@link #MODE_FIRST_MATCH} instead.
    */
   //@Deprecated
-  static const int FIRST = 2;
+  static const int FIRST;
 
   /**
    * Each call will be routed to the last route if the required score is
@@ -667,32 +523,32 @@ class Router : public echo::Echo {
    * @deprecated Use {@link #MODE_LAST_MATCH} instead.
    */
   //@Deprecated
-  static const int LAST = 3;
+  static const int LAST;
 
   /**
    * Each call will be routed to the route with the best score, if the
    * required score is reached.
    */
-  static const int MODE_BEST_MATCH = 1;
+  static const int MODE_BEST_MATCH;
 
   /**
    * Each call will be routed according to a custom mode.
    */
-  static const int MODE_CUSTOM = 6;
+  static const int MODE_CUSTOM;
 
   /**
    * Each call is routed to the first route if the required score is reached.
    * If the required score is not reached, then the route is skipped and the
    * next one is considered.
    */
-  static const int MODE_FIRST_MATCH = 2;
+  static const int MODE_FIRST_MATCH;
 
   /**
    * Each call will be routed to the last route if the required score is
    * reached. If the required score is not reached, then the route is skipped
    * and the previous one is considered.
    */
-  static const int MODE_LAST_MATCH = 3;
+  static const int MODE_LAST_MATCH;
 
   /**
    * Each call is be routed to the next route target if the required score is
@@ -701,7 +557,7 @@ class Router : public echo::Echo {
    * skipped and the next one is considered. If the last route is reached, the
    * first route will be considered.
    */
-  static const int MODE_NEXT_MATCH = 4;
+  static const int MODE_NEXT_MATCH;
 
   /**
    * Each call will be randomly routed to one of the routes that reached the
@@ -710,7 +566,7 @@ class Router : public echo::Echo {
    * we get back to the initial random route selected with no match, then we
    * return null.
    */
-  static const int MODE_RANDOM_MATCH = 5;
+  static const int MODE_RANDOM_MATCH;
 
   /**
    * Each call is be routed to the next route target if the required score is
@@ -722,7 +578,7 @@ class Router : public echo::Echo {
    * @deprecated Use {@link #MODE_NEXT_MATCH} instead.
    */
   //@Deprecated
-  static const int NEXT = 4;
+  static const int NEXT;
 
   /**
    * Each call will be randomly routed to one of the routes that reached the
@@ -734,7 +590,7 @@ class Router : public echo::Echo {
    * @deprecated Use {@link #MODE_RANDOM_MATCH} instead.
    */
   //@Deprecated
-  static const int RANDOM = 5;
+  static const int RANDOM;
 
  private:
   
