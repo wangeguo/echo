@@ -55,10 +55,7 @@ class TemplateRoute : public echo::routing::Filter {
    * @param next
    *            The next Echo.
    */
-  TemplateRoute(Router router, std::string uriTemplate, Echo::Echo next) {
-    TemplateRoute(router, new Template(uriTemplate, Template.MODE_STARTS_WITH,
-                              Variable.TYPE_URI_SEGMENT, "", true, false), next);
-  }
+  TemplateRoute(Router router, std::string uriTemplate, Echo::Echo next);
 
   /**
    * Constructor.
@@ -70,13 +67,7 @@ class TemplateRoute : public echo::routing::Filter {
    * @param next
    *            The next Echo.
    */
-  TemplateRoute(Router router, Template template, Echo::Echo next) {
-    Filter(router == null ? null : router.getContext(), next);
-    matchingQuery = (router == null) ? true : router
-                         .getDefaultMatchingQuery();
-    this->router = router;
-    this->template = template;
-  }
+  TemplateRoute(Router router, Template template, Echo::Echo next);
 
 
   /**
@@ -85,9 +76,7 @@ class TemplateRoute : public echo::routing::Filter {
    * 
    * @return The matching mode to use.
    */
-  int getMatchingMode() {
-    return getTemplate().getMatchingMode();
-  }
+  int getMatchingMode();
 
   /**
    * Indicates whether the query part should be taken into account when
@@ -140,38 +129,7 @@ class TemplateRoute : public echo::routing::Filter {
    *            The response to score.
    * @return The score for a given call (between 0 and 1.0).
    */
-  float score(echo::Request request, echo::Response response) {
-    float result = 0F;
-
-    if ((getRouter() != null) && (request.getResourceRef() != null)
-        && (getTemplate() != null)) {
-      const std::string remainingPart = request.getResourceRef()
-                                   .getRemainingPart(false, isMatchingQuery());
-      if (remainingPart != null) {
-        const int matchedLength = getTemplate().match(remainingPart);
-
-        if (matchedLength != -1) {
-          const float totalLength = remainingPart.length();
-
-          if (totalLength > 0.0F) {
-            result = getRouter().getRequiredScore()
-                     + (1.0F - getRouter().getRequiredScore())
-                     * (matchedLength / totalLength);
-          } else {
-            result = 1.0F;
-          }
-        }
-      }
-
-      if (getLogger().isLoggable(Level.FINER)) {
-        getLogger().finer(
-            "Call score for the \"" + getTemplate().getPattern()
-            + "\" URI pattern: " + result);
-      }
-    }
-
-    return result;
-  }
+  float score(echo::Request request, echo::Response response);
 
   /**
    * Sets the matching mode to use on the template when parsing a formatted
@@ -180,9 +138,7 @@ class TemplateRoute : public echo::routing::Filter {
    * @param matchingMode
    *            The matching mode to use.
    */
-  void setMatchingMode(int matchingMode) {
-    getTemplate().setMatchingMode(matchingMode);
-  }
+  void setMatchingMode(int matchingMode);
 
   /**
    * Sets whether the matching should be done on the URI with or without query
@@ -192,9 +148,7 @@ class TemplateRoute : public echo::routing::Filter {
    *            True if the matching should be done with the query string,
    *            false otherwise.
    */
-  void setMatchingQuery(bool matchingQuery) {
-    setMatchQuery(matchingQuery);
-  }
+  void setMatchingQuery(bool matchingQuery);
 
   /**
    * Sets whether the matching should be done on the URI with or without query
@@ -249,58 +203,7 @@ class TemplateRoute : public echo::routing::Filter {
    * @return The continuation status.
    */
   //@Override
-  int beforeHandle(Request request, Response response) {
-    // 1 - Parse the template variables and adjust the base reference
-    if (getTemplate() != null) {
-      const std::string remainingPart = request.getResourceRef()
-                                   .getRemainingPart(false, isMatchingQuery());
-      const int matchedLength = getTemplate().parse(remainingPart,
-                                                    request);
-
-      if (getLogger().isLoggable(Level.FINER)) {
-        getLogger().finer(
-            "Attempting to match this pattern: "
-            + getTemplate().getPattern() + " >> "
-            + matchedLength);
-      }
-
-      if (matchedLength != -1) {
-        // Updates the context
-        const std::string matchedPart = remainingPart.substring(0,
-                                                           matchedLength);
-        Reference baseRef = request.getResourceRef().getBaseRef();
-
-        if (baseRef == null) {
-          baseRef = new Reference(matchedPart);
-        } else {
-          baseRef = new Reference(baseRef.toString(false, false)
-                                  + matchedPart);
-        }
-
-        request.getResourceRef().setBaseRef(baseRef);
-
-        if (getLogger().isLoggable(Level.FINE)) {
-          getLogger().fine(
-              "New base URI: "
-              + request.getResourceRef().getBaseRef());
-          getLogger().fine(
-              "New remaining part: "
-              + request.getResourceRef()
-              .getRemainingPart(false,
-                                isMatchingQuery()));
-        }
-
-        if (getLogger().isLoggable(Level.FINE)) {
-          getLogger().fine(
-              "Delegating the call to the target Echo");
-        }
-      } else {
-        response.setStatus(Status.CLIENT_ERROR_NOT_FOUND);
-      }
-    }
-
-    return CONTINUE;
-  }
+  int beforeHandle(echo::Request request, echo::Response response);
     
  private:
 
