@@ -206,5 +206,3 @@ static const int Router::RANDOM(5);
 
 } // namespace routing
 } // namespace echo
-
-#endif // _ECHO_ROUTING_ROUTER_H_

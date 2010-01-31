@@ -490,4 +490,3 @@ static const int MODE_STARTS_WITH(1);
 } // namespace routing
 } // namespace echo
 
-#endif // _ECHO_ROUTING_TEMPLATE_H_
