@@ -12,3 +12,9 @@ TODO
  * 编写测试用例
  * 编写示例程序
 
+INSTALL
+ git clone git://github.com/wangeguo/echo.git echo
+ cd echo/
+ mkdir build
+ cd build/
+ cmake ../ && make && make install
