@@ -4,21 +4,20 @@
 #include <list>
 
 #include <echo/message.h>
+#include <echo/data/challenge-response.h>
+#include <echo/data/client-info.h>
+#include <echo/data/conditions.h>
+#include <echo/data/cookie.h>
+#include <echo/data/method.h>
+#include <echo/data/protocol.h>
+#include <echo/data/range.h>
+#include <echo/data/reference.h>
+#include <echo/engine/util/cookie-series.h>
+#include <echo/representation/representation.h>
+#include <echo/util/series.h>
 
 /*
   import java.util.concurrent.CopyOnWriteArrayList;
-
-  import org.restlet.data.ChallengeResponse;
-  import org.restlet.data.ClientInfo;
-  import org.restlet.data.Conditions;
-  import org.restlet.data.Cookie;
-  import org.restlet.data.Method;
-  import org.restlet.data.Protocol;
-  import org.restlet.data.Range;
-  import org.restlet.data.Reference;
-  import org.restlet.engine.util.CookieSeries;
-  import org.restlet.representation.Representation;
-  import org.restlet.util.Series;
 */
 
 namespace echo {

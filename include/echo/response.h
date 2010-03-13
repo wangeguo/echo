@@ -5,17 +5,6 @@
   import java.util.Date;
   import java.util.concurrent.CopyOnWriteArrayList;
   import java.util.concurrent.CopyOnWriteArraySet;
-
-  import org.restlet.data.AuthenticationInfo;
-  import org.restlet.data.ChallengeRequest;
-  import org.restlet.data.CookieSetting;
-  import org.restlet.data.Dimension;
-  import org.restlet.data.Method;
-  import org.restlet.data.Reference;
-  import org.restlet.data.ServerInfo;
-
-  import org.restlet.engine.util.CookieSettingSeries;
-  import org.restlet.util.Series;
 */
 
 #include <list>
@@ -23,6 +12,15 @@
 
 #include <echo/message.h>
 #include <echo/data/status.h>
+#include <echo/data/authentication-info.h>
+#include <echo/data/challenge-request.h>
+#include <echo/data/cookie-setting.h>
+#include <echo/data/dimension.h>
+#include <echo/data/method.h>
+#include <echo/data/reference.h>
+#include <echo/data/server-info.h>
+#include <echo/engine/util/cookie-setting-series.h>
+#include <echo/util/series.h>
 
 namespace echo {
 

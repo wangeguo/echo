@@ -7,7 +7,7 @@
 #include <list>
 
 #include <echo/context.h>
-//#include <echo/data/protocol.h>
+#include <echo/data/protocol.h>
 
 namespace echo {
 
