@@ -3,8 +3,6 @@
 
 /*
   import java.util.Date;
-  import java.util.List;
-  import java.util.Set;
   import java.util.concurrent.CopyOnWriteArrayList;
   import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -101,7 +99,7 @@ class Response : public echo::Message {
      * 
      * @return The set of allowed methods.
      */
-    Set<Method> getAllowedMethods();
+    std::set<Method> getAllowedMethods();
 
     /**
      * Returns information sent by an origin server related to an successful
@@ -125,7 +123,7 @@ class Response : public echo::Message {
      * 
      * @return The list of authentication requests.
      */
-    List<ChallengeRequest> getChallengeRequests();
+    std::list<ChallengeRequest> getChallengeRequests();
 
     /**
      * Returns the modifiable series of cookie settings provided by the server.
@@ -149,7 +147,7 @@ class Response : public echo::Message {
      * 
      * @return The set of dimensions on which the response entity may vary.
      */
-    Set<Dimension> getDimensions();
+    std::set<Dimension> getDimensions();
 
     /**
      * Returns the location reference. This is the reference that the client
@@ -183,7 +181,7 @@ class Response : public echo::Message {
      * 
      * @return The list of authentication requests.
      */
-    List<ChallengeRequest> getProxyChallengeRequests();
+    std::list<ChallengeRequest> getProxyChallengeRequests();
 
     /**
      * Returns the associated request
@@ -225,7 +223,7 @@ class Response : public echo::Message {
     }
 
     //@Override
-    boolean isConfidential();
+    bool isConfidential();
 
     /**
      * Permanently redirects the client to a target URI. The client is expected
@@ -247,7 +245,7 @@ class Response : public echo::Message {
      * @param targetUri
      *            The target URI.
      */
-    void redirectPermanent(String targetUri);
+    void redirectPermanent(std::string targetUri);
 
     /**
      * Redirects the client to a different URI that SHOULD be retrieved using a
@@ -275,7 +273,7 @@ class Response : public echo::Message {
      * @param targetUri
      *            The target URI.
      */
-    void redirectSeeOther(String targetUri);
+    void redirectSeeOther(std::string targetUri);
     /**
      * Temporarily redirects the client to a target URI. The client is expected
      * to reuse the same method for the new request.
@@ -296,7 +294,7 @@ class Response : public echo::Message {
      * @param targetUri
      *            The target URI.
      */
-    void redirectTemporary(String targetUri);
+    void redirectTemporary(std::string targetUri);
 
     /**
      * Sets the estimated amount of time since a response was generated or
@@ -324,7 +322,7 @@ class Response : public echo::Message {
      * @param allowedMethods
      *            The set of methods allowed on the requested resource.
      */
-    void setAllowedMethods(Set<Method> allowedMethods) {
+    void setAllowedMethods(std::set<Method> allowedMethods) {
       this->allowedMethods = allowedMethods;
     }
 
@@ -367,7 +365,7 @@ class Response : public echo::Message {
      *            The list of authentication requests sent by an origin server
      *            to a client.
      */
-    void setChallengeRequests(List<ChallengeRequest> requests);
+    void setChallengeRequests(std::list<ChallengeRequest> requests);
 
     /**
      * Sets the cookie settings provided by the server. Note that when used with
@@ -392,7 +390,7 @@ class Response : public echo::Message {
      * @param dimensions
      *            The set of dimensions on which the response entity may vary.
      */
-    void setDimensions(Set<Dimension> dimensions) {
+    void setDimensions(std::set<Dimension> dimensions) {
       this->dimensions = dimensions;
     }
 
@@ -422,7 +420,7 @@ class Response : public echo::Message {
      *            The URI to set.
      * @see #setLocationRef(Reference)
      */
-    void setLocationRef(String locationUri);
+    void setLocationRef(std::string locationUri);
 
     /**
      * Sets the callback invoked on response reception. If the value is not
@@ -447,7 +445,7 @@ class Response : public echo::Message {
      *            The list of authentication requests sent by a proxy to a
      *            client.
      */
-    void setProxyChallengeRequests(List<ChallengeRequest> requests) {
+    void setProxyChallengeRequests(std::list<ChallengeRequest> requests) {
       this->proxyChallengeRequests = requests;
     }
 
@@ -503,7 +501,7 @@ class Response : public echo::Message {
      * @param message
      *            The status message.
      */
-    void setStatus(echo::data::Status status, String message);
+    void setStatus(echo::data::Status status, std::string message);
 
     /**
      * Sets the status.
@@ -525,11 +523,11 @@ class Response : public echo::Message {
      * @param message
      *            The status message.
      */
-    void setStatus(echo::data::Status status, Throwable throwable, String message);
+    void setStatus(echo::data::Status status, Throwable throwable, std::string message);
 
 
  private:
-    static final ThreadLocal<Response> CURRENT = new ThreadLocal<Response>();
+    static const ThreadLocal<Response> CURRENT = new ThreadLocal<Response>();
     /**
      * Estimated amount of time since a response was generated or revalidated by
      * the origin server.
@@ -537,19 +535,19 @@ class Response : public echo::Message {
     volatile int age;
 
     /** The set of methods allowed on the requested resource. */
-    volatile Set<Method> allowedMethods;
+    volatile std::set<Method> allowedMethods;
 
     /** The authentication requests sent by an origin server to a client. */
-    volatile List<ChallengeRequest> challengeRequests;
+    volatile std::list<ChallengeRequest> challengeRequests;
 
     /** The authentication requests sent by a proxy to a client. */
-    volatile List<ChallengeRequest> proxyChallengeRequests;
+    volatile std::list<ChallengeRequest> proxyChallengeRequests;
 
     /** The cookie settings provided by the server. */
     volatile Series<CookieSetting> cookieSettings;
 
     /** The set of dimensions on which the response entity may vary. */
-    volatile Set<Dimension> dimensions;
+    volatile std::set<Dimension> dimensions;
 
     /** The reference used for redirections or creations. */
     volatile Reference locationRef;
