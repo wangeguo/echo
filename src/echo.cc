@@ -1,12 +1,11 @@
-#include <echo/echo.h>
-
 #include <stdexcept>
 
+#include <echo/echo.h>
 #include <echo/engine/engine.h>
 
 namespace echo {
 
-const std::string Echo::UNABLE_TO_START = "Unable to start the Echo";
+const std::string Echo::UNABLE_TO_START("Unable to start the Echo");
 
 Echo::Echo()
 {
